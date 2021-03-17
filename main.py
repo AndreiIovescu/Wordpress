@@ -1,3 +1,5 @@
+import json
+
 component_requirements = []
 offers = []
 assignment_matrix = []
@@ -5,26 +7,39 @@ vm_types = []
 
 
 def get_component_requirements():
-    with open('components_requirements.txt', 'r') as f:
-        components_list = [(line.strip()).split('[],') for line in f]
-        return components_list
+    with open('data.txt') as f:
+        components_list = json.load(f)
+        return components_list["Assignment Matrix"]
 
 
 def get_offers():
-    with open('offers.txt', 'r') as f:
-        offers_list = [(line.strip()).split('[],') for line in f]
-        return offers_list
+    with open('data.txt') as f:
+        components_list = json.load(f)
+        return components_list["Offers"]
+
+
+def get_assignment_matrix():
+    with open('data.txt') as f:
+        components_list = json.load(f)
+        return components_list["Assignment Matrix"]
+
+
+def get_vm_types():
+    with open('data.txt') as f:
+        components_list = json.load(f)
+        return components_list["Type Array"]
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     component_requirements = get_component_requirements()
     print(component_requirements)
-    for component in component_requirements:
-        print(component)
 
     offers = get_offers()
     print(offers)
-    for offer in offers:
-        print(offer)
 
+    assignment_matrix = get_assignment_matrix()
+    print(assignment_matrix)
+
+    vm_types = get_vm_types()
+    print(vm_types)
