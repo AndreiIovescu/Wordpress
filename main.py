@@ -45,6 +45,14 @@ def get_added_component():
         return component_requirements[added_component_id]
 
 
+# this function computes the number of deployed instances for the component with the provided id
+# that means it goes trough the assignment matrix at row 'component_id' and adds all the elements
+# since a value of 1 in the assignment matrix means 'deployed' we can find the occurrence of a certain component
+def compute_frequency(component_id):
+    component_frequency = sum(assignment_matrix[component_id])
+    return component_frequency
+
+
 # the function first checks whether the two components could be in conflict
 # if they can't, it will return false as there is no conflict and we don't have to check
 # if the two can be in conflict, then we have to check the assignment matrix
@@ -82,4 +90,6 @@ if __name__ == '__main__':
 
     added_component = get_added_component()
     print(added_component)
+
+    print(compute_sum(0))
 
