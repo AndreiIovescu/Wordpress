@@ -69,6 +69,18 @@ def check_conflict(assign_matrix, component_id, component2_id):
     return False
 
 
+def check_lower_bound(component_id, bound):
+    if compute_frequency(component_id) >= bound:
+        return True
+    return False
+
+
+def check_upper_bound(component_id, bound):
+    if compute_frequency(component_id) <= bound:
+        return True
+    return False
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     component_requirements = get_component_requirements()
@@ -91,5 +103,7 @@ if __name__ == '__main__':
     added_component = get_added_component()
     print(added_component)
 
-    print(compute_sum(0))
+    print(compute_frequency(0))
+
+    print(check_lower_bound(1, 2))
 
