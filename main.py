@@ -69,30 +69,40 @@ def check_conflict(component_id, component2_id):
     return False
 
 
+# checks whether the component with provided id is deployed at least 'bound' times
 def check_lower_bound(component_id, bound):
     if compute_frequency(component_id) >= bound:
         return True
     return False
 
 
+# checks whether the component with provided id is deployed at most 'bound' times
 def check_upper_bound(component_id, bound):
     if compute_frequency(component_id) <= bound:
         return True
     return False
 
 
+# this function checks whether the components with the provided id are both deployed in the system
+# it returns false if both are deployed, since there is no 'exclusive deployment' which needs just one to be deployed
 def check_exclusive_deployment(component_id, component2_id):
     if compute_frequency(component_id) > 0 and compute_frequency(component2_id) > 0:
         return False
     return True
 
 
+# this function verifies that the numerical constraint between two components is respected
+# Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
+# this is a require provide constraint since we have limitations for both 'require' and 'provider'
 def check_require_provide(component_id, component2_id, comp_instances, comp2_instances):
     if compute_frequency(component_id) * comp_instances <= compute_frequency(component2_id) * comp2_instances:
         return True
     return False
 
 
+# this function is similar to require provide, but this time we have no knowledge about one component in the relation
+# Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
+# we know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
 def check_provide(component_id, component2_id, comp_instances):
     if compute_frequency(component_id) <= comp_instances * compute_frequency(component2_id):
         return True
@@ -128,4 +138,3 @@ if __name__ == '__main__':
     print(check_exclusive_deployment(2, 3))
 
     print(check_provide(0, 3, 3))
-
