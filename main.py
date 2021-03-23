@@ -109,6 +109,35 @@ def check_provide(component_id, component2_id, comp_instances):
     return False
 
 
+# function that returns for a given component all the conflicts
+# it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
+def get_component_conflicts(component_id):
+    component_conflicts = []
+    for component in conflicts:
+        if int(component) == component_id:
+            component_conflicts = conflicts[component]
+        if component_id in conflicts[component]:
+            component_conflicts.append(int(component))
+    return component_conflicts
+
+
+# this function checks whether on a column from the assignment matrix(machine) we could add the new component
+# to do this, we first find all the components that are in conflict with the added component
+# then we look on the column with the provided id if there are any components deployed that are in conflict with the
+# component that we want to add
+# if there is at least one we cannot possibly deploy the new component on that machine
+def check_column_placement(column_id, component_id):
+    component_conflicts = get_component_conflicts(component_id)
+    for row in range(len(assignment_matrix)):
+        if assignment_matrix[row][column_id] == 1 and row in component_conflicts:
+            return False
+
+
+def greedy(component_id):
+    for i in range(len(assignment_matrix[component_id])):
+        pass
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     component_requirements = get_component_requirements()
@@ -126,7 +155,7 @@ if __name__ == '__main__':
     conflicts = get_conflicts()
     print(conflicts)
 
-    print(check_conflict(4, 1))
+    print(check_conflict(3, 0))
 
     added_component = get_added_component()
     print(added_component)
@@ -138,3 +167,5 @@ if __name__ == '__main__':
     print(check_exclusive_deployment(2, 3))
 
     print(check_provide(0, 3, 3))
+
+    check_column_placement(0, 0)
