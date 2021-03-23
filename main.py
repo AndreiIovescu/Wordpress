@@ -58,11 +58,11 @@ def compute_frequency(component_id):
 # if the two can be in conflict, then we have to check the assignment matrix
 # if the two rows that correspond to the components have the value 1 at the same position, then there exists a conflict
 # that is because they have been deployed on the same machine although that does not follow the constraints
-def check_conflict(assign_matrix, component_id, component2_id):
+def check_conflict(component_id, component2_id):
     for component in conflicts:
         if int(component) == component_id and component2_id in conflicts[component]:
-            for i in range(len(assign_matrix[0])):
-                if assign_matrix[component_id][i] == assign_matrix[component2_id][i] == 1:
+            for i in range(len(assignment_matrix[0])):
+                if assignment_matrix[component_id][i] == assignment_matrix[component2_id][i] == 1:
                     return True
         else:
             return False
@@ -77,6 +77,24 @@ def check_lower_bound(component_id, bound):
 
 def check_upper_bound(component_id, bound):
     if compute_frequency(component_id) <= bound:
+        return True
+    return False
+
+
+def check_exclusive_deployment(component_id, component2_id):
+    if compute_frequency(component_id) > 0 and compute_frequency(component2_id) > 0:
+        return False
+    return True
+
+
+def check_require_provide(component_id, component2_id, comp_instances, comp2_instances):
+    if compute_frequency(component_id) * comp_instances <= compute_frequency(component2_id) * comp2_instances:
+        return True
+    return False
+
+
+def check_provide(component_id, component2_id, comp_instances):
+    if compute_frequency(component_id) <= comp_instances * compute_frequency(component2_id):
         return True
     return False
 
@@ -98,7 +116,7 @@ if __name__ == '__main__':
     conflicts = get_conflicts()
     print(conflicts)
 
-    print(check_conflict(assignment_matrix, 4, 1))
+    print(check_conflict(4, 1))
 
     added_component = get_added_component()
     print(added_component)
@@ -106,4 +124,8 @@ if __name__ == '__main__':
     print(compute_frequency(0))
 
     print(check_lower_bound(1, 2))
+
+    print(check_exclusive_deployment(2, 3))
+
+    print(check_provide(0, 3, 3))
 
