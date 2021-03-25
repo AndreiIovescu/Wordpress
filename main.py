@@ -127,45 +127,32 @@ def get_component_conflicts(component_id):
 # component that we want to add
 # if there is at least one we cannot possibly deploy the new component on that machine
 def check_column_placement(column_id, component_id):
+    if assignment_matrix[component_id][column_id] == 1:
+        return False
     component_conflicts = get_component_conflicts(component_id)
     for row in range(len(assignment_matrix)):
         if assignment_matrix[row][column_id] == 1 and row in component_conflicts:
             return False
+    return True
 
 
 def greedy(component_id):
-    for i in range(len(assignment_matrix[component_id])):
-        pass
+    for column in range(len(assignment_matrix[component_id])):
+        print(check_column_placement(column, component_id))
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     component_requirements = get_component_requirements()
-    print(component_requirements)
 
     offers = get_offers()
-    print(offers)
 
     assignment_matrix = get_assignment_matrix()
-    print(assignment_matrix)
 
     vm_types = get_vm_types()
-    print(vm_types)
 
     conflicts = get_conflicts()
-    print(conflicts)
-
-    print(check_conflict(3, 0))
 
     added_component = get_added_component()
-    print(added_component)
 
-    print(compute_frequency(0))
-
-    print(check_lower_bound(1, 2))
-
-    print(check_exclusive_deployment(2, 3))
-
-    print(check_provide(0, 3, 3))
-
-    check_column_placement(0, 0)
+    greedy(0)
