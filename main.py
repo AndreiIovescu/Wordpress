@@ -136,13 +136,43 @@ def check_column_placement(column_id, component_id):
     return True
 
 
+# function that returns the id of the deployed component on the column(machine) with provided id
+# if no component is deployed the function returns false
+def get_deployed_component(column_id):
+    for row in range(len(assignment_matrix)):
+        if assignment_matrix[row][column_id] == 1:
+            return row
+    return False
+
+
+# function that returns the free amount of space on a given machine
+# if a component is already deployed on that machine it will compute the remaining space
+# otherwise it returns the entire capacity of the machine
+def get_free_space(machine_id, column):
+    free_space = []
+    deployed_component = get_deployed_component(column)
+    specification_index = 1
+    if not deployed_component:
+        for specification in offers[machine_id]:
+            free_space.append(specification - component_requirements[deployed_component][specification_index])
+            specification_index += 1
+        return free_space
+    else:
+        for specification in offers[machine_id]:
+            free_space.append(specification - component_requirements[deployed_component][specification_index])
+            specification_index += 1
+        return free_space
+
+
 def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
-        print(check_column_placement(column, component_id))
+        if check_column_placement(column, component_id):
+            print(get_free_space(vm_types[column], column))
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    # initialize global variables
     component_requirements = get_component_requirements()
 
     offers = get_offers()
