@@ -164,6 +164,12 @@ def get_free_space(machine_id, column):
         return free_space
 
 
+# checks if the free space on a machine is enough to deploy the component with provided id
+def check_enough_space(free_space, component_id):
+    remaining_space = [free_space[i - 1] - component_requirements[component_id][i] for i in range(1, 4)]
+    print(remaining_space)
+
+
 def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
@@ -186,3 +192,5 @@ if __name__ == '__main__':
     added_component = get_added_component()
 
     greedy(0)
+
+    check_enough_space([0, 3238, 0], 0)
