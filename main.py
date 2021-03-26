@@ -165,15 +165,21 @@ def get_free_space(machine_id, column):
 
 
 # checks if the free space on a machine is enough to deploy the component with provided id
+# we create a new list made of the difference between the free space on the machine and the component requirements
+# therefore, if any value is smaller than 0 that means we can not deploy a component of that type on the machine
 def check_enough_space(free_space, component_id):
     remaining_space = [free_space[i - 1] - component_requirements[component_id][i] for i in range(1, 4)]
-    print(remaining_space)
+    for specification in remaining_space:
+        if specification < 0:
+            return False
+    return True
 
 
 def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
-            print(get_free_space(vm_types[column], column))
+            free_space = get_free_space(vm_types[column], column)
+            print(check_enough_space(free_space, component_id))
 
 
 # Press the green button in the gutter to run the script.
