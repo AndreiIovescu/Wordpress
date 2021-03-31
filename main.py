@@ -6,6 +6,12 @@ assignment_matrix = []
 vm_types = []
 conflicts = {}
 added_component = []
+prices = []
+
+# variables to hold the output of the algorithm
+new_assignment_matrix = []
+new_price_array = []
+new_vm_types = []
 
 
 def get_component_requirements():
@@ -43,6 +49,11 @@ def get_added_component():
         components_list = json.load(f)
         added_component_id = components_list["Added Component"]
         return component_requirements[added_component_id]
+
+
+def get_prices(offers_array):
+    price_array = [row[len(offers_array[0]) - 1] for row in offers_array]
+    return price_array
 
 
 # this function computes the number of deployed instances for the component with the provided id
@@ -153,11 +164,13 @@ def get_free_space(machine_id, column):
     deployed_component = get_deployed_component(column)
     if not deployed_component:
         for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][specification_index + 1])
+            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][
+                specification_index + 1])
         return free_space
     else:
         for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][specification_index + 1])
+            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][
+                specification_index + 1])
         return free_space
 
 
@@ -172,12 +185,21 @@ def check_enough_space(free_space, component_id):
     return True
 
 
+# goes on each column (which represents a machine) in our assignment matrix and checks:
+# if we can put the new component on that machine regarding the conflict constraints that means,
+# we can deploy it on that machine if there exists no other component, or one that is not in conflict
+# then, in case we could make a case for deploying on a machine, we also have to check the capacity
+# that means, we have to go and check if on that machine, there is enough space to also add the new component
+# if we find a machine that satisfies both previous checks, we can return the new variables
+# we add the new component in the assignment matrix that we already have, while the type and price array remain the same
 def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
             free_space = get_free_space(vm_types[column], column)
             if check_enough_space(free_space, component_id):
-                pass
+                new_matrix = assignment_matrix
+                new_matrix[component_id][column] = 1
+                return new_matrix, prices, vm_types
 
 
 # Press the green button in the gutter to run the script.
@@ -186,6 +208,7 @@ if __name__ == '__main__':
     component_requirements = get_component_requirements()
 
     offers = get_offers()
+    prices = get_prices(offers)
 
     assignment_matrix = get_assignment_matrix()
 
@@ -197,6 +220,4 @@ if __name__ == '__main__':
 
     greedy(0)
 
-
-   
 
