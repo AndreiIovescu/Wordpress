@@ -52,7 +52,8 @@ def get_added_component():
 
 
 def get_prices(offers_array):
-    price_array = [row[len(offers_array[0]) - 1] for row in offers_array]
+    price_position = len(offers_array[0]) - 1
+    price_array = [row[price_position] for row in offers_array]
     return price_array
 
 
