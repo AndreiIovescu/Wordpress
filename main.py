@@ -151,16 +151,13 @@ def get_deployed_component(column_id):
 def get_free_space(machine_id, column):
     free_space = []
     deployed_component = get_deployed_component(column)
-    specification_index = 1
     if not deployed_component:
-        for specification in offers[machine_id]:
-            free_space.append(specification - component_requirements[deployed_component][specification_index])
-            specification_index += 1
+        for specification_index in range(len(offers[machine_id]) - 1):
+            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][specification_index + 1])
         return free_space
     else:
-        for specification in offers[machine_id]:
-            free_space.append(specification - component_requirements[deployed_component][specification_index])
-            specification_index += 1
+        for specification_index in range(len(offers[machine_id]) - 1):
+            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][specification_index + 1])
         return free_space
 
 
@@ -179,7 +176,8 @@ def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
             free_space = get_free_space(vm_types[column], column)
-            print(check_enough_space(free_space, component_id))
+            if check_enough_space(free_space, component_id):
+                pass
 
 
 # Press the green button in the gutter to run the script.
@@ -198,4 +196,7 @@ if __name__ == '__main__':
     added_component = get_added_component()
 
     greedy(0)
+
+
+   
 
