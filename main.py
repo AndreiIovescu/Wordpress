@@ -1,12 +1,20 @@
 import json
 
-component_requirements = []
-offers = []
+# input from MiniZinc results
 assignment_matrix = []
 vm_types = []
-conflicts = {}
-added_component = []
 prices = []
+
+# input
+component_requirements = []
+offers = []
+added_component = []
+
+# constraints
+constraints = {}
+conflicts = {}
+provide = {}
+require_provide = {}
 
 # variables to hold the output of the algorithm
 new_assignment_matrix = []
@@ -38,10 +46,14 @@ def get_vm_types():
         return components_list["Type Array"]
 
 
-def get_conflicts():
+def get_constraints():
     with open('data.txt') as f:
         components_list = json.load(f)
-        return components_list["Conflicts"]
+        constraints_dict = components_list["Constraints"]
+        conflict_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'Conflict']
+        provide_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'Provide']
+        require_provide_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'RequireProvide']
+        return constraints_dict, conflict_dict, provide_dict, require_provide_dict
 
 
 def get_added_component():
@@ -71,8 +83,8 @@ def compute_frequency(component_id):
 # if the two rows that correspond to the components have the value 1 at the same position, then there exists a conflict
 # that is because they have been deployed on the same machine although that does not follow the constraints
 def check_conflict(component_id, component2_id):
-    for component in conflicts:
-        if int(component) == component_id and component2_id in conflicts[component]:
+    for conflict in conflicts:
+        if conflict['compId'] == component_id and component2_id in conflict['compIdList']:
             for i in range(len(assignment_matrix[0])):
                 if assignment_matrix[component_id][i] == assignment_matrix[component2_id][i] == 1:
                     return True
@@ -125,11 +137,13 @@ def check_provide(component_id, component2_id, comp_instances):
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
 def get_component_conflicts(component_id):
     component_conflicts = []
-    for component in conflicts:
-        if int(component) == component_id:
-            component_conflicts = conflicts[component]
-        if component_id in conflicts[component]:
-            component_conflicts.append(int(component))
+    for conflict in conflicts:
+        if conflict['compId'] == component_id:
+            for component in conflict['compIdList']:
+                if component not in component_conflicts:
+                    component_conflicts.append(component)
+        if component_id in conflict['compIdList'] and conflict['compId'] not in component_conflicts:
+            component_conflicts.append(conflict['compId'])
     return component_conflicts
 
 
@@ -220,10 +234,17 @@ if __name__ == '__main__':
 
     vm_types = get_vm_types()
 
-    conflicts = get_conflicts()
-
     added_component = get_added_component()
 
+    constraints, conflicts, provide, require_provide = get_constraints()
+
     greedy(0)
+
+
+
+
+
+
+
 
 

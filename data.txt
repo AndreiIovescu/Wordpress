@@ -36,10 +36,13 @@
         [1, 3750, 1000, 98]
     ],
     "Type Array": [16, 16, 14, 14, 14, 16, 16, 16],
-    "Conflicts": { 
-        "4": [1,2,3],
-        "2": [0,1,4],
-        "3": [0,1,4]
-        },
+    "Constraints": [
+        {"type": "Conflict", "compId":4, "compIdList":[1, 2, 3]},
+        {"type": "Conflict", "compId":3, "compIdList":[0, 1, 4]},
+        {"type": "Conflict", "compId":2, "compIdList":[0, 1, 4]},
+        {"type": "Provide", "alphaCompId":0, "betaCompId":2, "alphaCompIdInstances":7},
+        {"type": "Provide", "alphaCompId":0, "betaCompId":3, "alphaCompIdInstances":3},
+        {"type": "RequireProvide", "alphaCompId":0, "betaCompId":1, "alphaCompIdInstances":2, "betaCompIdInstances":3}
+    ], 
     "Added Component": 0
 }
