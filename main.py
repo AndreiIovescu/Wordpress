@@ -72,8 +72,8 @@ def get_prices(offers_array):
 # this function computes the number of deployed instances for the component with the provided id
 # that means it goes trough the assignment matrix at row 'component_id' and adds all the elements
 # since a value of 1 in the assignment matrix means 'deployed' we can find the occurrence of a certain component
-def compute_frequency(component_id):
-    component_frequency = sum(assignment_matrix[component_id])
+def compute_frequency(component_id, matrix):
+    component_frequency = sum(matrix[component_id])
     return component_frequency
 
 
@@ -118,8 +118,9 @@ def check_exclusive_deployment(component_id, component2_id):
 # this function verifies that the numerical constraint between two components is respected
 # Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
 # this is a require provide constraint since we have limitations for both 'require' and 'provider'
-def check_require_provide(component_id, component2_id, comp_instances, comp2_instances):
-    if compute_frequency(component_id) * comp_instances <= compute_frequency(component2_id) * comp2_instances:
+def check_require_provide(component_id, component2_id, comp_instances, comp2_instances, matrix):
+    if compute_frequency(component_id, matrix) * comp_instances <= compute_frequency(component2_id,
+                                                                                     matrix) * comp2_instances:
         return True
     return False
 
@@ -127,8 +128,8 @@ def check_require_provide(component_id, component2_id, comp_instances, comp2_ins
 # this function is similar to require provide, but this time we have no knowledge about one component in the relation
 # Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
 # we know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
-def check_provide(component_id, component2_id, comp_instances):
-    if compute_frequency(component_id) <= comp_instances * compute_frequency(component2_id):
+def check_provide(component_id, component2_id, comp_instances, matrix):
+    if compute_frequency(component_id, matrix) <= comp_instances * compute_frequency(component2_id, matrix):
         return True
     return False
 
@@ -200,8 +201,30 @@ def check_enough_space(free_space, component_id):
     return True
 
 
-def check_constraints():
-    pass
+def check_constraints(component_id, matrix):
+    problem_constraints = []
+    for provide_rule in provide:
+        if provide_rule['alphaCompId'] == component_id or provide_rule['betaCompId'] == component_id:
+            if not check_provide(provide_rule['alphaCompId'], provide_rule['betaCompId'],
+                                 provide_rule['alphaCompIdInstances'], matrix):
+                problem_constraints.append(provide_rule)
+    for req_prov_rule in require_provide:
+        if req_prov_rule['alphaCompId'] == component_id or req_prov_rule['betaCompId'] == component_id:
+            if not check_require_provide(req_prov_rule['alphaCompId'], req_prov_rule['betaCompId'],
+                                         req_prov_rule['alphaCompIdInstances'], req_prov_rule['betaCompIdInstances'], matrix):
+                problem_constraints.append(req_prov_rule)
+    return problem_constraints
+
+
+def add_column(matrix, component_id):
+    counter = 0
+    for row in matrix:
+        if counter == component_id:
+            row.append(1)
+        else:
+            row.append(0)
+        counter += 1
+    return matrix
 
 
 # goes on each column (which represents a machine) in our assignment matrix and checks:
@@ -219,7 +242,12 @@ def greedy(component_id):
             if check_enough_space(free_space, component_id):
                 new_matrix = assignment_matrix
                 new_matrix[component_id][column] = 1
-                return new_matrix, prices, vm_types
+                print(check_constraints(component_id, new_matrix))
+            else:
+                copy_matrix = assignment_matrix
+                new_matrix = add_column(copy_matrix, component_id)
+                if not check_constraints(component_id, new_matrix):
+                    return new_matrix
 
 
 # Press the green button in the gutter to run the script.
@@ -239,12 +267,3 @@ if __name__ == '__main__':
     constraints, conflicts, provide, require_provide = get_constraints()
 
     greedy(0)
-
-
-
-
-
-
-
-
-
