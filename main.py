@@ -186,13 +186,18 @@ def check_enough_space(free_space, component_id):
     return True
 
 
+def check_constraints():
+    pass
+
+
 # goes on each column (which represents a machine) in our assignment matrix and checks:
 # if we can put the new component on that machine regarding the conflict constraints that means,
 # we can deploy it on that machine if there exists no other component, or one that is not in conflict
 # then, in case we could make a case for deploying on a machine, we also have to check the capacity
 # that means, we have to go and check if on that machine, there is enough space to also add the new component
-# if we find a machine that satisfies both previous checks, we can return the new variables
-# we add the new component in the assignment matrix that we already have, while the type and price array remain the same
+# if we find a machine that satisfies both previous checks, we have to look for one last thing
+# we need to take the possible new assignment matrix and verify that all the numerical constraints regarding
+# the new component are satisfied
 def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
