@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 
 # input from MiniZinc results
 assignment_matrix = []
@@ -224,14 +225,15 @@ def check_constraints(component_id, matrix):
 # the column is filled with 0's besides the corresponding row for the component
 # we use this function to build a new assignment matrix for our solution
 def add_column(matrix, component_id):
+    return_matrix = deepcopy(matrix)
     counter = 0
-    for row in matrix:
+    for row in return_matrix:
         if counter == component_id:
             row.append(1)
         else:
             row.append(0)
         counter += 1
-    return matrix
+    return return_matrix
 
 
 # goes on each column (which represents a machine) in our assignment matrix and checks:
@@ -247,12 +249,12 @@ def greedy(component_id):
         if check_column_placement(column, component_id):
             free_space = get_free_space(vm_types[column], column)
             if check_enough_space(free_space, component_id):
-                new_matrix = assignment_matrix
+                new_matrix = list.copy(assignment_matrix)
                 new_matrix[component_id][column] = 1
                 print(check_constraints(component_id, new_matrix))
             else:
-                copy_matrix = assignment_matrix
-                new_matrix = add_column(copy_matrix, component_id)
+                new_matrix = add_column(assignment_matrix, component_id)
+                print(check_constraints(component_id, new_matrix))
                 if not check_constraints(component_id, new_matrix):
                     return new_matrix
 
