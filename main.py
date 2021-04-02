@@ -201,6 +201,10 @@ def check_enough_space(free_space, component_id):
     return True
 
 
+# receives a component id and a matrix and checks on the matrix if the constraints that involve the component
+# are satisfied; if they are we return an empty list, otherwise all problem constraints are returned
+# since we we need to check only the provide and require provide constraints, we can go trough them at a time,
+# and check each one if is true; add to the list only the bad ones
 def check_constraints(component_id, matrix):
     problem_constraints = []
     for provide_rule in provide:
@@ -216,6 +220,9 @@ def check_constraints(component_id, matrix):
     return problem_constraints
 
 
+# receives a matrix and a component id, and adds a new column in the matrix
+# the column is filled with 0's besides the corresponding row for the component
+# we use this function to build a new assignment matrix for our solution
 def add_column(matrix, component_id):
     counter = 0
     for row in matrix:
