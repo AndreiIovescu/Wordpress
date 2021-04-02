@@ -6,16 +6,11 @@ assignment_matrix = []
 vm_types = []
 prices = []
 
-# input
+# problem input
 components = []
 offers = []
 added_component = []
-
-# constraints
 constraints = {}
-conflicts = {}
-provide = {}
-require_provide = {}
 
 # variables to hold the output of the algorithm
 new_assignment_matrix = []
@@ -51,10 +46,7 @@ def get_constraints():
     with open('data.txt') as f:
         components_list = json.load(f)
         constraints_dict = components_list["Constraints"]
-        conflict_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'Conflict']
-        provide_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'Provide']
-        require_provide_dict = [constraint for constraint in constraints_dict if constraint['type'] == 'RequireProvide']
-        return constraints_dict, conflict_dict, provide_dict, require_provide_dict
+        return constraints_dict
 
 
 def get_added_component():
@@ -83,6 +75,7 @@ def compute_frequency(component_id, matrix):
 # if the two rows that correspond to the components have the value 1 at the same position, then there exists a conflict
 # that is because they have been deployed on the same machine although that does not follow the constraints
 def check_conflict(component_id, component2_id):
+    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflict']
     for conflict in conflicts:
         if conflict['compId'] == component_id and component2_id in conflict['compIdList']:
             for i in range(len(assignment_matrix[0])):
@@ -137,6 +130,7 @@ def check_provide(component_id, component2_id, comp_instances, matrix):
 # function that returns for a given component all the conflicts
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
 def get_component_conflicts(component_id):
+    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflict']
     component_conflicts = []
     for conflict in conflicts:
         if conflict['compId'] == component_id:
@@ -203,19 +197,7 @@ def check_enough_space(free_space, component_id):
 # since we we need to check only the provide and require provide constraints, we can go trough them at a time,
 # and check each one if is true; add to the list only the bad ones
 def check_constraints(component_id, matrix):
-    problem_constraints = []
-    for provide_rule in provide:
-        if provide_rule['alphaCompId'] == component_id or provide_rule['betaCompId'] == component_id:
-            if not check_provide(provide_rule['alphaCompId'], provide_rule['betaCompId'],
-                                 provide_rule['alphaCompIdInstances'], matrix):
-                problem_constraints.append(provide_rule)
-    for req_prov_rule in require_provide:
-        if req_prov_rule['alphaCompId'] == component_id or req_prov_rule['betaCompId'] == component_id:
-            if not check_require_provide(req_prov_rule['alphaCompId'], req_prov_rule['betaCompId'],
-                                         req_prov_rule['alphaCompIdInstances'], req_prov_rule['betaCompIdInstances'],
-                                         matrix):
-                problem_constraints.append(req_prov_rule)
-    return problem_constraints
+    pass
 
 
 # receives a matrix and a component id, and adds a new column in the matrix
@@ -270,7 +252,7 @@ if __name__ == '__main__':
 
     added_component = get_added_component()
 
-    constraints, conflicts, provide, require_provide = get_constraints()
+    constraints = get_constraints()
 
     # greedy(0)
 
