@@ -164,29 +164,25 @@ def check_column_placement(column_id, component_id):
 
 
 # function that returns the id of the deployed component on the column(machine) with provided id
-# if no component is deployed the function returns false
+# if no component is deployed the function returns -1
 def get_deployed_component(column_id):
     for row in range(len(assignment_matrix)):
         if assignment_matrix[row][column_id] == 1:
             return row
-    return False
+    return -1
 
 
 # function that returns the free amount of space on a given machine
 # if a component is already deployed on that machine it will compute the remaining space
 # otherwise it returns the entire capacity of the machine
 def get_free_space(machine_id, column):
-    free_space = []
     deployed_component = get_deployed_component(column)
-    if not deployed_component:
-        for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - components[deployed_component][
-                specification_index + 1])
+    if deployed_component == -1:
+        free_space = [offers[machine_id][resource] for resource in offers[machine_id] if resource != 'Price']
         return free_space
     else:
-        for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - components[deployed_component][
-                specification_index + 1])
+        resources = [resource for resource in offers[machine_id] if resource != 'Price']
+        free_space = [offers[machine_id][resource] - components[deployed_component][resource] for resource in resources]
         return free_space
 
 
