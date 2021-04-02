@@ -7,7 +7,7 @@ vm_types = []
 prices = []
 
 # input
-component_requirements = []
+components = []
 offers = []
 added_component = []
 
@@ -23,10 +23,10 @@ new_price_array = []
 new_vm_types = []
 
 
-def get_component_requirements():
+def get_components():
     with open('data.txt') as f:
         components_list = json.load(f)
-        return components_list["Components Requirements"]
+        return components_list["Components"]
 
 
 def get_offers():
@@ -61,12 +61,11 @@ def get_added_component():
     with open('data.txt') as f:
         components_list = json.load(f)
         added_component_id = components_list["Added Component"]
-        return component_requirements[added_component_id]
+        return components[added_component_id]
 
 
 def get_prices(offers_array):
-    price_position = len(offers_array[0]) - 1
-    price_array = [row[price_position] for row in offers_array]
+    price_array = [offer['Price'] for offer in offers_array]
     return price_array
 
 
@@ -181,12 +180,12 @@ def get_free_space(machine_id, column):
     deployed_component = get_deployed_component(column)
     if not deployed_component:
         for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][
+            free_space.append(offers[machine_id][specification_index] - components[deployed_component][
                 specification_index + 1])
         return free_space
     else:
         for specification_index in range(len(offers[machine_id]) - 1):
-            free_space.append(offers[machine_id][specification_index] - component_requirements[deployed_component][
+            free_space.append(offers[machine_id][specification_index] - components[deployed_component][
                 specification_index + 1])
         return free_space
 
@@ -195,7 +194,7 @@ def get_free_space(machine_id, column):
 # we create a new list made of the difference between the free space on the machine and the component requirements
 # therefore, if any value is smaller than 0 that means we can not deploy a component of that type on the machine
 def check_enough_space(free_space, component_id):
-    remaining_space = [free_space[index - 1] - component_requirements[component_id][index] for index in range(1, 4)]
+    remaining_space = [free_space[index - 1] - components[component_id][index] for index in range(1, 4)]
     for specification in remaining_space:
         if specification < 0:
             return False
@@ -216,7 +215,8 @@ def check_constraints(component_id, matrix):
     for req_prov_rule in require_provide:
         if req_prov_rule['alphaCompId'] == component_id or req_prov_rule['betaCompId'] == component_id:
             if not check_require_provide(req_prov_rule['alphaCompId'], req_prov_rule['betaCompId'],
-                                         req_prov_rule['alphaCompIdInstances'], req_prov_rule['betaCompIdInstances'], matrix):
+                                         req_prov_rule['alphaCompIdInstances'], req_prov_rule['betaCompIdInstances'],
+                                         matrix):
                 problem_constraints.append(req_prov_rule)
     return problem_constraints
 
@@ -262,7 +262,7 @@ def greedy(component_id):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # initialize global variables
-    component_requirements = get_component_requirements()
+    components = get_components()
 
     offers = get_offers()
     prices = get_prices(offers)
@@ -275,4 +275,6 @@ if __name__ == '__main__':
 
     constraints, conflicts, provide, require_provide = get_constraints()
 
-    greedy(0)
+    # greedy(0)
+
+    # to ask: how to deal with unknown constraints in code
