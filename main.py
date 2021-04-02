@@ -190,9 +190,10 @@ def get_free_space(machine_id, column):
 # we create a new list made of the difference between the free space on the machine and the component requirements
 # therefore, if any value is smaller than 0 that means we can not deploy a component of that type on the machine
 def check_enough_space(free_space, component_id):
-    remaining_space = [free_space[index - 1] - components[component_id][index] for index in range(1, 4)]
-    for specification in remaining_space:
-        if specification < 0:
+    resources = [resource for resource in components[component_id] if resource != 'Name']
+    remaining_space = [free_space[index] - components[component_id][resources[index]] for index in range(len(free_space))]
+    for space in remaining_space:
+        if space < 0:
             return False
     return True
 
