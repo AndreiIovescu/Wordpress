@@ -1,4 +1,5 @@
 import json
+import string
 from copy import deepcopy
 
 # input from MiniZinc results
@@ -69,21 +70,20 @@ def compute_frequency(component_id, matrix):
     return component_frequency
 
 
-# the function first checks whether the two components could be in conflict
-# if they can't, it will return false as there is no conflict and we don't have to check
-# if the two can be in conflict, then we have to check the assignment matrix
-# if the two rows that correspond to the components have the value 1 at the same position, then there exists a conflict
-# that is because they have been deployed on the same machine although that does not follow the constraints
-def check_conflict(component_id, component2_id):
-    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflict']
-    for conflict in conflicts:
-        if conflict['compId'] == component_id and component2_id in conflict['compIdList']:
-            for i in range(len(assignment_matrix[0])):
-                if assignment_matrix[component_id][i] == assignment_matrix[component2_id][i] == 1:
-                    return True
-        else:
+# checks on each machine if the component with parameter id and his conflict are both deployed
+def check_conflict(constraint, matrix, component_id):
+    conflict_component_id = constraint['compId']
+    for column in range(len(matrix[0])):
+        conflict_component_deployed = False
+        component_id_deployed = False
+        for row in range(len(matrix)):
+            if matrix[row][column] == 1 and row == conflict_component_id:
+                conflict_component_deployed = True
+            elif matrix[row][column] == 1 and row == component_id:
+                component_id_deployed = True
+        if component_id_deployed is True and conflict_component_deployed is True:
             return False
-    return False
+    return True
 
 
 # checks whether the component with provided id is deployed at least 'bound' times
@@ -185,38 +185,51 @@ def get_free_space(machine_id, column):
 # therefore, if any value is smaller than 0 that means we can not deploy a component of that type on the machine
 def check_enough_space(free_space, component_id):
     resources = [resource for resource in components[component_id] if resource != 'Name']
-    remaining_space = [free_space[index] - components[component_id][resources[index]] for index in range(len(free_space))]
+    remaining_space = [free_space[index] - components[component_id][resources[index]] for index in
+                       range(len(free_space))]
     for space in remaining_space:
         if space < 0:
             return False
     return True
 
 
-# receives a component id and a matrix and checks on the matrix if the constraints that involve the component
-# are satisfied; if they are we return an empty list, otherwise all problem constraints are returned
-# since we we need to check only the provide and require provide constraints, we can go trough them at a time,
-# and check each one if is true; add to the list only the bad ones
-def check_constraints(component_id, matrix):
-    Id = ['compId', 'alphaCompId', 'betaCompId', 'compIdList']
+# build a list of all the constraints that involve the component with the parameter id
+def get_component_constraints(component_id):
+    component_constraints = []
+    # the only keys that can contain a component id
+    id_keys = ['compId', 'alphaCompId', 'betaCompId', 'compIdList']
     for constraint in constraints:
-        constraint_id = [value for value in constraint if value in Id]
-        for Id_Name in constraint_id:
-            if component_id == constraint[Id_Name]:
-                print(constraint)
+        # gets the corresponding keys for that specific constraint
+        constraint_keys = [value for value in constraint if value in id_keys]
+        for id_key in constraint_keys:
+            # some of the keys can have lists as value so we have to check if they contain our component id
+            if type(constraint[id_key]) is list:
+                if component_id in constraint[id_key]:
+                    component_constraints.append(constraint)
+            else:
+                if component_id == constraint[id_key]:
+                    component_constraints.append(constraint)
+    return component_constraints
 
 
-# receives a matrix and a component id, and adds a new column in the matrix
-# the column is filled with 0's besides the corresponding row for the component
-# we use this function to build a new assignment matrix for our solution
+def check_constraints(constraints_list, matrix, component_id):
+    for constraint in constraints_list:
+        constraint_name = constraint['type']
+        corresponding_function = eval(f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
+        print(corresponding_function)
+
+
+# builds a new matrix by adding a column to the parameter one
+# the new column has 0 on every row but the one corresponding to the component with the parameter id
 def add_column(matrix, component_id):
     return_matrix = deepcopy(matrix)
-    counter = 0
+    row_counter = 0
     for row in return_matrix:
-        if counter == component_id:
+        if row_counter == component_id:
             row.append(1)
         else:
             row.append(0)
-        counter += 1
+        row_counter += 1
     return return_matrix
 
 
@@ -235,12 +248,8 @@ def greedy(component_id):
             if check_enough_space(free_space, component_id):
                 new_matrix = list.copy(assignment_matrix)
                 new_matrix[component_id][column] = 1
-                print(check_constraints(component_id, new_matrix))
             else:
                 new_matrix = add_column(assignment_matrix, component_id)
-                print(check_constraints(component_id, new_matrix))
-                if not check_constraints(component_id, new_matrix):
-                    return new_matrix
 
 
 # Press the green button in the gutter to run the script.
@@ -261,6 +270,4 @@ if __name__ == '__main__':
 
     # greedy(0)
 
-    check_constraints(0, assignment_matrix)
-
-    # to ask: how to deal with unknown constraints in code
+    print(check_constraints(get_component_constraints(0), assignment_matrix, 0))

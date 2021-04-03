@@ -42,11 +42,12 @@
         {"type": "Conflict", "compId":2, "compIdList":[0, 1, 4]},
         {"type": "Provide", "alphaCompId":0, "betaCompId":2, "alphaCompIdInstances":7},
         {"type": "Provide", "alphaCompId":0, "betaCompId":3, "alphaCompIdInstances":3},
-        {"type": "RequireProvide", "alphaCompId":0, "betaCompId":1, "alphaCompIdInstances":2, "betaCompIdInstances":3},
-        {"type": "LowerBound", "compId":0, "bound":3},
-        {"type": "LowerBound", "compId":4, "bound":2},
-        {"type": "LowerBound", "compId":1, "bound":2},
-        {"type": "UpperBound", "compId":2, "bound":1}
+        {"type": "Require_Provide", "alphaCompId":0, "betaCompId":1, "alphaCompIdInstances":2, "betaCompIdInstances":3},
+        {"type": "Lower_Bound", "compId":0, "bound":3},
+        {"type": "Lower_Bound", "compId":4, "bound":2},
+        {"type": "Lower_Bound", "compId":1, "bound":2},
+        {"type": "Upper_Bound", "compId":2, "bound":1},
+        {"type": "Exclusive_Deployment", "alphaCompId":2, "betaCompId":3}
     ], 
     "Added Component": 0
 }
