@@ -197,7 +197,12 @@ def check_enough_space(free_space, component_id):
 # since we we need to check only the provide and require provide constraints, we can go trough them at a time,
 # and check each one if is true; add to the list only the bad ones
 def check_constraints(component_id, matrix):
-    pass
+    Id = ['compId', 'alphaCompId', 'betaCompId', 'compIdList']
+    for constraint in constraints:
+        constraint_id = [value for value in constraint if value in Id]
+        for Id_Name in constraint_id:
+            if component_id == constraint[Id_Name]:
+                print(constraint)
 
 
 # receives a matrix and a component id, and adds a new column in the matrix
@@ -255,5 +260,7 @@ if __name__ == '__main__':
     constraints = get_constraints()
 
     # greedy(0)
+
+    check_constraints(0, assignment_matrix)
 
     # to ask: how to deal with unknown constraints in code
