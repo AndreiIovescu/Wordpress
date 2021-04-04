@@ -1,5 +1,4 @@
 import json
-import string
 from copy import deepcopy
 
 # input from MiniZinc results
@@ -102,7 +101,6 @@ def check_upper_bound(constraint, matrix, component_id):
 
 
 # this function checks whether the components with the provided id are both deployed in the system
-# it returns false if both are deployed, since there is no 'exclusive deployment' which needs just one to be deployed
 def check_exclusive_deployment(constraint, matrix, component_id):
     if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
             and compute_frequency(constraint['betaCompId'], matrix) > 0:
@@ -148,11 +146,8 @@ def get_component_conflicts(component_id):
     return component_conflicts
 
 
-# this function checks whether on a column from the assignment matrix(machine) we could add the new component
-# to do this, we first find all the components that are in conflict with the added component
-# then we look on the column with the provided id if there are any components deployed that are in conflict with the
-# component that we want to add
-# if there is at least one we cannot possibly deploy the new component on that machine
+# a function that checks whether we can deploy the component with given id on the machine with given id
+# to do that, we have to check such that the machine has no components that are in conflict with the given one
 def check_column_placement(column_id, component_id):
     if assignment_matrix[component_id][column_id] == 1:
         return False
@@ -164,7 +159,6 @@ def check_column_placement(column_id, component_id):
 
 
 # function that returns the id of the deployed component on the column(machine) with provided id
-# if no component is deployed the function returns -1
 def get_deployed_component(column_id):
     for row in range(len(assignment_matrix)):
         if assignment_matrix[row][column_id] == 1:
@@ -173,26 +167,25 @@ def get_deployed_component(column_id):
 
 
 # function that returns the free amount of space on a given machine
-# if a component is already deployed on that machine it will compute the remaining space
-# otherwise it returns the entire capacity of the machine
 def get_free_space(machine_id, column):
     deployed_component = get_deployed_component(column)
     if deployed_component == -1:
+        # we return the entire machine capacity since there is no deployed component
         free_space = [offers[machine_id][resource] for resource in offers[machine_id] if resource != 'Price']
         return free_space
     else:
         resources = [resource for resource in offers[machine_id] if resource != 'Price']
+        # we return the remaining between the machine capacity and the already occupied space
         free_space = [offers[machine_id][resource] - components[deployed_component][resource] for resource in resources]
         return free_space
 
 
 # checks if the free space on a machine is enough to deploy the component with provided id
-# we create a new list made of the difference between the free space on the machine and the component requirements
-# therefore, if any value is smaller than 0 that means we can not deploy a component of that type on the machine
 def check_enough_space(free_space, component_id):
     resources = [resource for resource in components[component_id] if resource != 'Name']
-    remaining_space = [free_space[index] - components[component_id][resources[index]] for index in
-                       range(len(free_space))]
+    # compute remaining space by subtracting the component requirements from the free space
+    remaining_space = [free_space[index] - components[component_id][resources[index]]
+                       for index in range(len(free_space))]
     for space in remaining_space:
         if space < 0:
             return False
@@ -218,12 +211,15 @@ def get_component_constraints(component_id):
     return component_constraints
 
 
+# function that checks all the constraints that involve the component with parameter id and returns the false ones
 def check_constraints(constraints_list, matrix, component_id):
+    false_constraints = []
     for constraint in constraints_list:
-        print(constraint)
         constraint_name = constraint['type']
-        corresponding_function = eval(f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
-        print(corresponding_function)
+        corresponding_function_result = eval(f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
+        if not corresponding_function_result:
+            false_constraints.append(constraint)
+    return false_constraints
 
 
 # builds a new matrix by adding a column to the parameter one
@@ -240,26 +236,20 @@ def add_column(matrix, component_id):
     return return_matrix
 
 
-# goes on each column (which represents a machine) in our assignment matrix and checks:
-# if we can put the new component on that machine regarding the conflict constraints that means,
-# we can deploy it on that machine if there exists no other component, or one that is not in conflict
-# then, in case we could make a case for deploying on a machine, we also have to check the capacity
-# that means, we have to go and check if on that machine, there is enough space to also add the new component
-# if we find a machine that satisfies both previous checks, we have to look for one last thing
-# we need to take the possible new assignment matrix and verify that all the numerical constraints regarding
-# the new component are satisfied
 def greedy(component_id):
+    component_constraints = get_component_constraints(component_id)
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(column, component_id):
             free_space = get_free_space(vm_types[column], column)
             if check_enough_space(free_space, component_id):
-                new_matrix = list.copy(assignment_matrix)
+                new_matrix = deepcopy(assignment_matrix)
                 new_matrix[component_id][column] = 1
             else:
                 new_matrix = add_column(assignment_matrix, component_id)
+                false_constraints = check_constraints(component_constraints, new_matrix, component_id)
+                print(false_constraints)
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     # initialize global variables
     components = get_components()
@@ -275,6 +265,5 @@ if __name__ == '__main__':
 
     constraints = get_constraints()
 
-    # greedy(0)
+    greedy(0)
 
-    print(check_constraints(get_component_constraints(0), assignment_matrix, 0))
