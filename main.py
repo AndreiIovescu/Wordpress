@@ -236,6 +236,10 @@ def add_column(matrix, component_id):
     return return_matrix
 
 
+def handle_false_constraints(false_constraints):
+    pass
+
+
 def greedy(component_id):
     component_constraints = get_component_constraints(component_id)
     for column in range(len(assignment_matrix[component_id])):

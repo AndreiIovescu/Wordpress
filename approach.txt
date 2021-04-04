@@ -1,0 +1,18 @@
+The greedy approach:
+
+1.      Check if we can place the new component on the machines we have (regarding the conflict constraints)
+2.      On the possible machines from before check also if there is enough space left for the deploy
+
+3.1     If there is enough space, we must verify if the constraints that involve the added component still hold
+        We verify them on the initial assignment matrix to which we update the new (hypothetically) added component
+4.1     If the constraints hold, we must choose the machine type where we want to deploy the component
+        In this case, we can return the new assignment matrix, the new price array and the new machine types array
+
+3.2     If there is not enough space to deploy the component, it means we have to buy at least one new machine
+        We verify a hypothetically new assignment matrix, that we obtain by adding a new column to the original one
+        The new column has 0 in every row but the one corresponding to the added component id 
+
+4.2.1   If all the constraints are still true, we have to choose a machine 
+        and return the new assignment matrix, price array and machine types array
+
+4.2.2   If there are constraints that are false, we have to deal with them first
