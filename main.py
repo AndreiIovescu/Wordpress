@@ -71,6 +71,7 @@ def compute_frequency(component_id, matrix):
 
 
 # checks on each machine if the component with parameter id and his conflict are both deployed
+# returns true if no such conflict exists
 def check_conflict(constraint, matrix, component_id):
     conflict_component_id = constraint['compId']
     for column in range(len(matrix[0])):
@@ -87,23 +88,24 @@ def check_conflict(constraint, matrix, component_id):
 
 
 # checks whether the component with provided id is deployed at least 'bound' times
-def check_lower_bound(component_id, bound):
-    if compute_frequency(component_id) >= bound:
+def check_lower_bound(constraint, matrix, component_id):
+    if compute_frequency(component_id, matrix) >= constraint['bound']:
         return True
     return False
 
 
 # checks whether the component with provided id is deployed at most 'bound' times
-def check_upper_bound(component_id, bound):
-    if compute_frequency(component_id) <= bound:
+def check_upper_bound(constraint, matrix, component_id):
+    if compute_frequency(component_id, matrix) <= constraint['bound']:
         return True
     return False
 
 
 # this function checks whether the components with the provided id are both deployed in the system
 # it returns false if both are deployed, since there is no 'exclusive deployment' which needs just one to be deployed
-def check_exclusive_deployment(component_id, component2_id):
-    if compute_frequency(component_id) > 0 and compute_frequency(component2_id) > 0:
+def check_exclusive_deployment(constraint, matrix, component_id):
+    if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
+            and compute_frequency(constraint['betaCompId'], matrix) > 0:
         return False
     return True
 
@@ -111,9 +113,9 @@ def check_exclusive_deployment(component_id, component2_id):
 # this function verifies that the numerical constraint between two components is respected
 # Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
 # this is a require provide constraint since we have limitations for both 'require' and 'provider'
-def check_require_provide(component_id, component2_id, comp_instances, comp2_instances, matrix):
-    if compute_frequency(component_id, matrix) * comp_instances <= compute_frequency(component2_id,
-                                                                                     matrix) * comp2_instances:
+def check_require_provide(constraint, matrix, component_id):
+    if compute_frequency(constraint['alphaCompId'], matrix) * constraint['alphaCompIdInstances'] <= \
+            compute_frequency(constraint['betaCompId'], matrix) * constraint['betaCompIdInstances']:
         return True
     return False
 
@@ -121,8 +123,12 @@ def check_require_provide(component_id, component2_id, comp_instances, comp2_ins
 # this function is similar to require provide, but this time we have no knowledge about one component in the relation
 # Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
 # we know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
-def check_provide(component_id, component2_id, comp_instances, matrix):
-    if compute_frequency(component_id, matrix) <= comp_instances * compute_frequency(component2_id, matrix):
+def check_provide(constraint, matrix, component_id):
+    if compute_frequency(constraint['alphaCompId'], matrix) == 0 \
+            or compute_frequency(constraint['betaCompId'], matrix) == 0:
+        return True
+    if compute_frequency(constraint['alphaCompId'], matrix) <= \
+            constraint['alphaCompIdInstances'] * compute_frequency(constraint['betaCompId'], matrix):
         return True
     return False
 
@@ -214,6 +220,7 @@ def get_component_constraints(component_id):
 
 def check_constraints(constraints_list, matrix, component_id):
     for constraint in constraints_list:
+        print(constraint)
         constraint_name = constraint['type']
         corresponding_function = eval(f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
         print(corresponding_function)
