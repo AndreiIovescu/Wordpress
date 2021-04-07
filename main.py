@@ -268,6 +268,7 @@ def add_column(matrix, component_id):
     return return_matrix
 
 
+# a function that gets the name of each false constraint and calls the corresponding function to handle it
 def handle_false_constraints(false_constraints, matrix, component_id):
     for constraint in false_constraints:
         constraint_name = constraint['type']
