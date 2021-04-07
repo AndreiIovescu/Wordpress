@@ -138,6 +138,9 @@ def handle_provide(constraint, matrix, component_id):
     else:
         problem_component_id = constraint['alphaCompId']
     # we try to place the new component on any new machine besides the original ones
+    for column in range(len(assignment_matrix[0]), len(matrix[0])):
+        if check_column_placement(matrix, column, problem_component_id):
+            matrix[problem_component_id][column] = 1
             return matrix
     # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
     matrix = add_column(matrix, problem_component_id)
