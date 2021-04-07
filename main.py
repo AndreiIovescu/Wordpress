@@ -269,12 +269,12 @@ def handle_false_constraints(false_constraints, matrix, component_id):
     return matrix
 
 
-def function(matrix, component_id, component_constraints):
+def get_final_matrix(matrix, component_id, component_constraints):
     false_constraints = check_constraints(component_constraints, matrix, component_id)
-    if not false_constraints:
-        return matrix
-    else:
+    while false_constraints:
         matrix = handle_false_constraints(false_constraints, matrix, component_id)
+        false_constraints = check_constraints(component_constraints, matrix, component_id)
+    return matrix
 
 
 def greedy(component_id):
@@ -287,13 +287,7 @@ def greedy(component_id):
                 new_matrix[component_id][column] = 1
             else:
                 new_matrix = add_column(assignment_matrix, component_id)
-                false_constraints = check_constraints(component_constraints, new_matrix, component_id)
-                if not false_constraints:
-                    pass
-                new_matrix = handle_false_constraints(false_constraints, new_matrix, component_id)
-                false_constraints = check_constraints(component_constraints, new_matrix, component_id)
-                if not false_constraints:
-                    print("We did it!!")
+                new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
                 print(new_matrix)
 
 
@@ -313,4 +307,3 @@ if __name__ == '__main__':
     constraints = get_constraints()
 
     greedy(0)
-
