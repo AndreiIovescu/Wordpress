@@ -191,24 +191,26 @@ def check_column_placement(matrix, column_id, component_id):
 
 
 # function that returns the id of the deployed component on the column(machine) with provided id
-def get_deployed_component(matrix, column_id):
+def get_deployed_components(matrix, column_id):
+    deployed_components = []
     for row in range(len(matrix)):
         if matrix[row][column_id] == 1:
-            return row
-    return -1
+            deployed_components.append(row)
+    return deployed_components
 
 
 # function that returns the free amount of space on a given machine
 def get_free_space(machine_id, matrix, column):
-    deployed_component = get_deployed_component(matrix, column)
-    if deployed_component == -1:
+    deployed_components = get_deployed_components(matrix, column)
+    if not deployed_components:
         # we return the entire machine capacity since there is no deployed component
         free_space = [offers[machine_id][resource] for resource in offers[machine_id] if resource != 'Price']
         return free_space
     else:
         resources = [resource for resource in offers[machine_id] if resource != 'Price']
         # we return the remaining between the machine capacity and the already occupied space
-        free_space = [offers[machine_id][resource] - components[deployed_component][resource] for resource in resources]
+        free_space = [offers[machine_id][resource] - components[deployed_component][resource]
+                      for resource in resources for deployed_component in deployed_components]
         return free_space
 
 
@@ -287,7 +289,7 @@ def get_final_matrix(matrix, component_id, component_constraints):
 
 
 def get_new_components(matrix):
-    new_machines_index = len(matrix[0])
+    pass
 
 
 def greedy(component_id):
@@ -295,6 +297,7 @@ def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(assignment_matrix, column, component_id):
             free_space = get_free_space(vm_types[column], assignment_matrix, column)
+            print(free_space)
             if check_enough_space(free_space, component_id):
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix[component_id][column] = 1
