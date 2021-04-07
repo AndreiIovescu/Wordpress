@@ -131,28 +131,34 @@ def check_provide(constraint, matrix, component_id):
     return False
 
 
+# a function that tries to fix a provide constraint that is false
 def handle_provide(constraint, matrix, component_id):
     if constraint['alphaCompId'] == component_id:
         problem_component_id = constraint['betaCompId']
     else:
         problem_component_id = constraint['alphaCompId']
+    # we try to place the new component on any new machine besides the original ones
     for column in range(len(assignment_matrix), len(matrix)):
         if check_column_placement(matrix, len(matrix), problem_component_id):
             matrix[problem_component_id][len(matrix)] = 1
             return matrix
+    # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
     matrix = add_column(matrix, problem_component_id)
     return matrix
 
 
+# a function that tries to fix a require_provide constraint that is false
 def handle_require_provide(constraint, matrix, component_id):
     if constraint['betaCompId'] == component_id:
         problem_component_id = constraint['alphaCompId']
     else:
         problem_component_id = constraint['betaCompId']
+    # we try to place the new component on any new machine besides the original ones
     for column in range(len(assignment_matrix), len(matrix)):
         if check_column_placement(matrix, len(matrix), problem_component_id):
             matrix[problem_component_id][len(matrix)] = 1
             return matrix
+    # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
     matrix = add_column(matrix, problem_component_id)
     return matrix
 
