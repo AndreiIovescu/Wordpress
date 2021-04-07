@@ -131,6 +131,32 @@ def check_provide(constraint, matrix, component_id):
     return False
 
 
+def handle_provide(constraint, matrix, component_id):
+    if constraint['alphaCompId'] == component_id:
+        problem_component_id = constraint['betaCompId']
+    else:
+        problem_component_id = constraint['alphaCompId']
+    for column in range(len(assignment_matrix), len(matrix)):
+        if check_column_placement(matrix, len(matrix), problem_component_id):
+            matrix[problem_component_id][len(matrix)] = 1
+            return matrix
+    matrix = add_column(matrix, problem_component_id)
+    return matrix
+
+
+def handle_require_provide(constraint, matrix, component_id):
+    if constraint['betaCompId'] == component_id:
+        problem_component_id = constraint['alphaCompId']
+    else:
+        problem_component_id = constraint['betaCompId']
+    for column in range(len(assignment_matrix), len(matrix)):
+        if check_column_placement(matrix, len(matrix), problem_component_id):
+            matrix[problem_component_id][len(matrix)] = 1
+            return matrix
+    matrix = add_column(matrix, problem_component_id)
+    return matrix
+
+
 # function that returns for a given component all the conflicts
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
 def get_component_conflicts(component_id):
@@ -148,7 +174,7 @@ def get_component_conflicts(component_id):
 
 # a function that checks whether we can deploy the component with given id on the machine with given id
 # to do that, we have to check such that the machine has no components that are in conflict with the given one
-def check_column_placement(column_id, component_id):
+def check_column_placement(matrix, column_id, component_id):
     if assignment_matrix[component_id][column_id] == 1:
         return False
     component_conflicts = get_component_conflicts(component_id)
@@ -236,14 +262,25 @@ def add_column(matrix, component_id):
     return return_matrix
 
 
-def handle_false_constraints(false_constraints):
-    pass
+def handle_false_constraints(false_constraints, matrix, component_id):
+    for constraint in false_constraints:
+        constraint_name = constraint['type']
+        matrix = eval(f'handle_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
+    return matrix
+
+
+def function(matrix, component_id, component_constraints):
+    false_constraints = check_constraints(component_constraints, matrix, component_id)
+    if not false_constraints:
+        return matrix
+    else:
+        matrix = handle_false_constraints(false_constraints, matrix, component_id)
 
 
 def greedy(component_id):
     component_constraints = get_component_constraints(component_id)
     for column in range(len(assignment_matrix[component_id])):
-        if check_column_placement(column, component_id):
+        if check_column_placement(assignment_matrix, column, component_id):
             free_space = get_free_space(vm_types[column], column)
             if check_enough_space(free_space, component_id):
                 new_matrix = deepcopy(assignment_matrix)
@@ -251,7 +288,13 @@ def greedy(component_id):
             else:
                 new_matrix = add_column(assignment_matrix, component_id)
                 false_constraints = check_constraints(component_constraints, new_matrix, component_id)
-                print(false_constraints)
+                if not false_constraints:
+                    pass
+                new_matrix = handle_false_constraints(false_constraints, new_matrix, component_id)
+                false_constraints = check_constraints(component_constraints, new_matrix, component_id)
+                if not false_constraints:
+                    print("We did it!!")
+                print(new_matrix)
 
 
 if __name__ == '__main__':
