@@ -315,8 +315,8 @@ def greedy(component_id):
             else:
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
-                deployed_components = get_new_resources(new_matrix)
-                return deployed_components
+                new_components_resources = get_new_resources(new_matrix)
+                return new_components_resources
 
 
 if __name__ == '__main__':
