@@ -288,15 +288,20 @@ def get_final_matrix(matrix, component_id, component_constraints):
     return matrix
 
 
-# a function that will return a list containing all the new components that were not in the initial solution
-# for each new machine, we create a list with the components, every such list being held in a bigger list
-def get_new_components(matrix):
-    deployed_components = []
+# a function that returns a list containing the resource that each of the new components consume
+# for each machine we have a dictionary with the sum of resources on that machine, all of those held in a list
+def get_new_resources(matrix):
+    new_components_resources = []
+    resources_keys = [key for key in components[0] if key != 'Name']
     for column in range(len(assignment_matrix[0]), len(matrix[0])):
         deployed_components_id = get_deployed_components(matrix, column)
         components_dict = [components[index] for index in deployed_components_id]
-        deployed_components.append(components_dict)
-    return deployed_components
+        machine_resources = {resource: 0 for resource in resources_keys}
+        for component in components_dict:
+            for key in resources_keys:
+                machine_resources[key] = machine_resources[key] + component[key]
+        new_components_resources.append(machine_resources)
+    return new_components_resources
 
 
 def greedy(component_id):
@@ -310,7 +315,7 @@ def greedy(component_id):
             else:
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
-                deployed_components = get_new_components(new_matrix)
+                deployed_components = get_new_resources(new_matrix)
                 return deployed_components
 
 
