@@ -56,9 +56,10 @@ def get_added_component():
         return components[added_component_id]
 
 
-def get_prices(offers_array):
-    price_array = [offer['Price'] for offer in offers_array]
-    return price_array
+def get_prices():
+    with open('data.txt') as f:
+        components_list = json.load(f)
+        return components_list["Price Array"]
 
 
 # this function computes the number of deployed instances for the component with the provided id
@@ -304,6 +305,28 @@ def get_new_resources(matrix):
     return new_components_resources
 
 
+#
+def sort_offers(offers_list):
+    sorted_list = sorted(offers_list, key=lambda i: (i['Cpu'], i['Memory'], i['Storage'], i['Price']))
+    return sorted_list
+
+
+def choose_machine(offers_list, components_resources):
+    new_machines = []
+    for machine_resources in components_resources:
+        for offer in offers_list:
+            is_good = True
+            for key in offer:
+                if key != 'Price':
+                    if offer[key] < machine_resources[key]:
+                        is_good = False
+                        break
+            if is_good:
+                new_machines.append(offers.index(offer))
+                break
+    return new_machines
+
+
 def greedy(component_id):
     component_constraints = get_component_constraints(component_id)
     for column in range(len(assignment_matrix[component_id])):
@@ -316,7 +339,12 @@ def greedy(component_id):
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
                 new_components_resources = get_new_resources(new_matrix)
-                return new_components_resources
+                sorted_offers = sort_offers(offers)
+                new_machines_id = choose_machine(sorted_offers, new_components_resources)
+                for machine_id in new_machines_id:
+                    vm_types.append(machine_id)
+                    prices.append(offers[machine_id]['Price'])
+            return new_matrix, vm_types, prices
 
 
 if __name__ == '__main__':
@@ -324,7 +352,8 @@ if __name__ == '__main__':
     components = get_components()
 
     offers = get_offers()
-    prices = get_prices(offers)
+
+    prices = get_prices()
 
     assignment_matrix = get_assignment_matrix()
 
@@ -334,4 +363,9 @@ if __name__ == '__main__':
 
     constraints = get_constraints()
 
-    print(greedy(0))
+    new_assignment_matrix, new_vm_types, new_price_array = greedy(0)
+
+    for row in new_assignment_matrix:
+        print(row)
+    print(new_vm_types)
+    print(new_price_array)

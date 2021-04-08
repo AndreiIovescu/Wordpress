@@ -36,6 +36,7 @@
         {"Cpu": 1, "Memory": 3750, "Storage": 1000, "Price": 98}
     ],
     "Type Array": [16, 16, 14, 14, 14, 16, 16, 16],
+    "Price Array":[128, 128, 379, 379, 379, 128, 128, 128],
     "Constraints": [
         {"type": "Conflict", "compId":4, "compIdList":[1, 2, 3]},
         {"type": "Conflict", "compId":3, "compIdList":[0, 1, 4]},
