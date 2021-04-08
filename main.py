@@ -288,8 +288,15 @@ def get_final_matrix(matrix, component_id, component_constraints):
     return matrix
 
 
+# a function that will return a list containing all the new components that were not in the initial solution
+# for each new machine, we create a list with the components, every such list being held in a bigger list
 def get_new_components(matrix):
-    pass
+    deployed_components = []
+    for column in range(len(assignment_matrix[0]), len(matrix[0])):
+        deployed_components_id = get_deployed_components(matrix, column)
+        components_dict = [components[index] for index in deployed_components_id]
+        deployed_components.append(components_dict)
+    return deployed_components
 
 
 def greedy(component_id):
@@ -297,14 +304,14 @@ def greedy(component_id):
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(assignment_matrix, column, component_id):
             free_space = get_free_space(vm_types[column], assignment_matrix, column)
-            print(free_space)
             if check_enough_space(free_space, component_id):
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix[component_id][column] = 1
             else:
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
-                return new_matrix
+                deployed_components = get_new_components(new_matrix)
+                return deployed_components
 
 
 if __name__ == '__main__':
