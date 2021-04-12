@@ -51,11 +51,10 @@ def get_vm_types(file):
         return json_list["Type Array"]
 
 
-def get_constraints():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        constraints_dict = components_list["Constraints"]
-        return constraints_dict
+def get_constraints(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list['restrictions']
 
 
 def get_added_component(file):
@@ -80,8 +79,8 @@ def compute_frequency(component_id, matrix):
 
 # checks on each machine if the component with parameter id and his conflict are both deployed
 # returns true if no such conflict exists
-def check_conflict(constraint, matrix, component_id):
-    conflict_component_id = constraint['compId']
+def check_conflicts(constraint, matrix, component_id):
+    conflict_component_id = constraint['alphaCompId']
     for column in range(len(matrix[0])):
         conflict_component_deployed = False
         component_id_deployed = False
@@ -175,15 +174,15 @@ def handle_require_provide(constraint, matrix, component_id):
 # function that returns for a given component all the conflicts
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
 def get_component_conflicts(component_id):
-    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflict']
+    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflicts']
     component_conflicts = []
     for conflict in conflicts:
-        if conflict['compId'] == component_id:
-            for component in conflict['compIdList']:
+        if conflict['alphaCompId'] == component_id:
+            for component in conflict['compsIdList']:
                 if component not in component_conflicts:
                     component_conflicts.append(component)
-        if component_id in conflict['compIdList'] and conflict['compId'] not in component_conflicts:
-            component_conflicts.append(conflict['compId'])
+        if component_id in conflict['compsIdList'] and conflict['alphaCompId'] not in component_conflicts:
+            component_conflicts.append(conflict['alphaCompId'])
     return component_conflicts
 
 
@@ -239,7 +238,7 @@ def check_enough_space(free_space, component_id):
 def get_component_constraints(component_id):
     component_constraints = []
     # the only keys that can contain a component id
-    id_keys = ['compId', 'alphaCompId', 'betaCompId', 'compIdList']
+    id_keys = ['alphaCompId', 'betaCompId', 'compsIdList']
     for constraint in constraints:
         # gets the corresponding keys for that specific constraint
         constraint_keys = [value for value in constraint if value in id_keys]
@@ -371,7 +370,9 @@ if __name__ == '__main__':
 
     added_component = get_added_component("Wordpress3_Offers20_Input.json")
 
-    constraints = get_constraints()
+    constraints = get_constraints("Wordpress3.json")
+
+    print(constraints)
 
     # existing_solution = parse_existing_solution(file)
     # output wordpress3_offers20 - contine new matrix, types, price
