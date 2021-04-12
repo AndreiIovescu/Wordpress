@@ -18,10 +18,19 @@ new_price_array = []
 new_vm_types = []
 
 
-def get_components():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        return components_list["Components"]
+def get_components(file):
+    with open(file) as f:
+        components_list = []
+        json_list = json.load(f)
+        for entry in json_list['components']:
+            component = {
+                'Name': entry['name'],
+                'Cpu': entry['Compute']['CPU'],
+                'Memory': entry['Compute']['CPU'],
+                'Storage': entry['Storage']['StorageSize']
+            }
+            components_list.append(component)
+    return components_list
 
 
 def get_offers():
@@ -350,7 +359,7 @@ def greedy(component_id):
 
 if __name__ == '__main__':
     # initialize global variables
-    components = get_components()
+    components = get_components("Wordpress3.json")
 
     offers = get_offers()
 
