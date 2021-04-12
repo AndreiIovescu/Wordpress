@@ -334,7 +334,14 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
                 for machine_id in new_machines_id:
                     vm_types.append(machine_id)
                     prices.append(offers[machine_id]['Price'])
-            return new_matrix, vm_types, prices
+                output_dictionary = {
+                    'Assignment Matrix': new_matrix,
+                    'Type Array': vm_types,
+                    'Price Array': prices
+                }
+                with open("Wordpress3_Offers20_Output.json", "w") as f:
+                    f.write(json.dumps(output_dictionary))
+                return new_matrix, vm_types, prices
 
 
 if __name__ == '__main__':
@@ -349,15 +356,15 @@ if __name__ == '__main__':
 
     comp_id = existing_solution['Added Component']
 
-    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components, comp_id, constraints,
-                                                                  offers)
+    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components, comp_id,
+                                                                  constraints, offers)
 
     # existing_solution = parse_existing_solution(file) ✓
-    # output wordpress3_offers20 - contine new matrix, types, price
+    # output wordpress3_offers20 - contine new matrix, types, price ✓
     # greedy(existing solution, components_list, component_id, offers_list)✓
     # fisier de input general ✓
     # var. globale ✓
-    # output csv/json
+    # output csv/json ✓
     # split input file : application, offers, wordpress3_offers20.json ✓
     # impossible constraint -> explain why plus output
     # minizinc python
