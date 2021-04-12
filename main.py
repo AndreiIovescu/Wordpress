@@ -33,10 +33,19 @@ def get_components(file):
     return components_list
 
 
-def get_offers():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        return components_list["Offers"]
+def get_offers(file):
+    with open(file) as f:
+        offers_list = []
+        json_list = json.load(f)
+        for entry in json_list:
+            offer = {
+                'Cpu': json_list[entry]['cpu'],
+                'Memory': json_list[entry]['memory'],
+                'Storage': json_list[entry]['storage'],
+                'Price': json_list[entry]['price']
+            }
+            offers_list.append(offer)
+        return offers_list
 
 
 def get_assignment_matrix(file):
@@ -360,7 +369,7 @@ if __name__ == '__main__':
     # initialize global variables
     components = get_components("Wordpress3.json")
 
-    offers = get_offers()
+    offers = get_offers("offers_20.json")
 
     prices = get_prices("Wordpress3_Offers20_Input.json")
 
@@ -371,8 +380,6 @@ if __name__ == '__main__':
     added_component = get_added_component("Wordpress3_Offers20_Input.json")
 
     constraints = get_constraints("Wordpress3.json")
-
-    print(constraints)
 
     # existing_solution = parse_existing_solution(file)
     # output wordpress3_offers20 - contine new matrix, types, price
