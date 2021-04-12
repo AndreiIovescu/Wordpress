@@ -30,16 +30,16 @@ def get_offers():
         return components_list["Offers"]
 
 
-def get_assignment_matrix():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        return components_list["Assignment Matrix"]
+def get_assignment_matrix(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list["Assignment Matrix"]
 
 
-def get_vm_types():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        return components_list["Type Array"]
+def get_vm_types(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list["Type Array"]
 
 
 def get_constraints():
@@ -49,17 +49,16 @@ def get_constraints():
         return constraints_dict
 
 
-def get_added_component():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        added_component_id = components_list["Added Component"]
-        return components[added_component_id]
+def get_added_component(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list['Added Component']
 
 
-def get_prices():
-    with open('data.txt') as f:
-        components_list = json.load(f)
-        return components_list["Price Array"]
+def get_prices(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list["Price Array"]
 
 
 # this function computes the number of deployed instances for the component with the provided id
@@ -335,6 +334,8 @@ def greedy(component_id):
             if check_enough_space(free_space, component_id):
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix[component_id][column] = 1
+                if check_constraints(component_constraints, new_matrix, component_id):
+                    return new_matrix, vm_types, prices
             else:
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
@@ -353,15 +354,26 @@ if __name__ == '__main__':
 
     offers = get_offers()
 
-    prices = get_prices()
+    prices = get_prices("Wordpress3_Offers20_Input.json")
 
-    assignment_matrix = get_assignment_matrix()
+    assignment_matrix = get_assignment_matrix("Wordpress3_Offers20_Input.json")
 
-    vm_types = get_vm_types()
+    vm_types = get_vm_types("Wordpress3_Offers20_Input.json")
 
-    added_component = get_added_component()
+    added_component = get_added_component("Wordpress3_Offers20_Input.json")
 
     constraints = get_constraints()
+
+    # existing_solution = parse_existing_solution(file)
+    # output wordpress3_offers20 - contine new matrix, types, price
+
+    # greedy(existing solution, components_list, component_id, offers_list)
+    # fisier de input general
+    # var. globale
+    # output csv/json
+    # split input file : application, offers, wordpress3_offers20.json
+    # impossible constraint -> explain why plus output
+    # minizinc python
 
     new_assignment_matrix, new_vm_types, new_price_array = greedy(0)
 
