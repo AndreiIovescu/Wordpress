@@ -1,22 +1,6 @@
 import json
 from copy import deepcopy
 
-# input from MiniZinc results
-assignment_matrix = []
-vm_types = []
-prices = []
-
-# problem input
-components = []
-offers = []
-added_component = []
-constraints = {}
-
-# variables to hold the output of the algorithm
-new_assignment_matrix = []
-new_price_array = []
-new_vm_types = []
-
 
 def get_components(file):
     with open(file) as f:
@@ -31,6 +15,12 @@ def get_components(file):
             }
             components_list.append(component)
     return components_list
+
+
+def get_constraints(file):
+    with open(file) as f:
+        json_list = json.load(f)
+        return json_list['restrictions']
 
 
 def get_offers(file):
@@ -48,34 +38,10 @@ def get_offers(file):
         return offers_list
 
 
-def get_assignment_matrix(file):
+def parse_existing_solution(file):
     with open(file) as f:
         json_list = json.load(f)
-        return json_list["Assignment Matrix"]
-
-
-def get_vm_types(file):
-    with open(file) as f:
-        json_list = json.load(f)
-        return json_list["Type Array"]
-
-
-def get_constraints(file):
-    with open(file) as f:
-        json_list = json.load(f)
-        return json_list['restrictions']
-
-
-def get_added_component(file):
-    with open(file) as f:
-        json_list = json.load(f)
-        return json_list['Added Component']
-
-
-def get_prices(file):
-    with open(file) as f:
-        json_list = json.load(f)
-        return json_list["Price Array"]
+        return json_list
 
 
 # this function computes the number of deployed instances for the component with the provided id
@@ -149,41 +115,41 @@ def check_provide(constraint, matrix, component_id):
 
 
 # a function that tries to fix a provide constraint that is false
-def handle_provide(constraint, matrix, component_id):
+def handle_provide(constraint, new_matrix, initial_matrix, component_id, constraints_list):
     if constraint['alphaCompId'] == component_id:
         problem_component_id = constraint['betaCompId']
     else:
         problem_component_id = constraint['alphaCompId']
     # we try to place the new component on any new machine besides the original ones
-    for column in range(len(assignment_matrix[0]), len(matrix[0])):
-        if check_column_placement(matrix, column, problem_component_id):
-            matrix[problem_component_id][column] = 1
-            return matrix
+    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+        if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+            new_matrix[problem_component_id][column] = 1
+            return new_matrix
     # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
-    matrix = add_column(matrix, problem_component_id)
+    matrix = add_column(new_matrix, problem_component_id)
     return matrix
 
 
 # a function that tries to fix a require_provide constraint that is false
-def handle_require_provide(constraint, matrix, component_id):
+def handle_require_provide(constraint, new_matrix, initial_matrix, component_id, constraints_list):
     if constraint['betaCompId'] == component_id:
         problem_component_id = constraint['alphaCompId']
     else:
         problem_component_id = constraint['betaCompId']
     # we try to place the new component on any new machine besides the original ones
-    for column in range(len(assignment_matrix[0]), len(matrix[0])):
-        if check_column_placement(matrix, column, problem_component_id):
-            matrix[problem_component_id][column] = 1
-            return matrix
+    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+        if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+            new_matrix[problem_component_id][column] = 1
+            return new_matrix
     # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
-    matrix = add_column(matrix, problem_component_id)
+    matrix = add_column(new_matrix, problem_component_id)
     return matrix
 
 
 # function that returns for a given component all the conflicts
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
-def get_component_conflicts(component_id):
-    conflicts = [constraint for constraint in constraints if constraint['type'] == 'Conflicts']
+def get_component_conflicts(component_id, constraints_list):
+    conflicts = [constraint for constraint in constraints_list if constraint['type'] == 'Conflicts']
     component_conflicts = []
     for conflict in conflicts:
         if conflict['alphaCompId'] == component_id:
@@ -197,10 +163,10 @@ def get_component_conflicts(component_id):
 
 # a function that checks whether we can deploy the component with given id on the machine with given id
 # to do that, we have to check such that the machine has no components that are in conflict with the given one
-def check_column_placement(matrix, column_id, component_id):
+def check_column_placement(matrix, column_id, component_id, constraints_list):
     if matrix[component_id][column_id] == 1:
         return False
-    component_conflicts = get_component_conflicts(component_id)
+    component_conflicts = get_component_conflicts(component_id, constraints_list)
     for row in range(len(matrix)):
         if matrix[row][column_id] == 1 and row in component_conflicts:
             return False
@@ -217,25 +183,25 @@ def get_deployed_components(matrix, column_id):
 
 
 # function that returns the free amount of space on a given machine
-def get_free_space(machine_id, matrix, column):
+def get_free_space(machine_id, matrix, column, offers_list, components_list):
     deployed_components = get_deployed_components(matrix, column)
     if not deployed_components:
         # we return the entire machine capacity since there is no deployed component
-        free_space = [offers[machine_id][resource] for resource in offers[machine_id] if resource != 'Price']
+        free_space = [offers_list[machine_id][resource] for resource in offers_list[machine_id] if resource != 'Price']
         return free_space
     else:
         resources = [resource for resource in offers[machine_id] if resource != 'Price']
         # we return the remaining between the machine capacity and the already occupied space
-        free_space = [offers[machine_id][resource] - components[deployed_component][resource]
+        free_space = [offers_list[machine_id][resource] - components_list[deployed_component][resource]
                       for resource in resources for deployed_component in deployed_components]
         return free_space
 
 
 # checks if the free space on a machine is enough to deploy the component with provided id
-def check_enough_space(free_space, component_id):
-    resources = [resource for resource in components[component_id] if resource != 'Name']
+def check_enough_space(free_space, component_id, components_list):
+    resources = [resource for resource in components_list[component_id] if resource != 'Name']
     # compute remaining space by subtracting the component requirements from the free space
-    remaining_space = [free_space[index] - components[component_id][resources[index]]
+    remaining_space = [free_space[index] - components_list[component_id][resources[index]]
                        for index in range(len(free_space))]
     for space in remaining_space:
         if space < 0:
@@ -244,11 +210,11 @@ def check_enough_space(free_space, component_id):
 
 
 # build a list of all the constraints that involve the component with the parameter id
-def get_component_constraints(component_id):
+def get_component_constraints(component_id, constraints_list):
     component_constraints = []
     # the only keys that can contain a component id
     id_keys = ['alphaCompId', 'betaCompId', 'compsIdList']
-    for constraint in constraints:
+    for constraint in constraints_list:
         # gets the corresponding keys for that specific constraint
         constraint_keys = [value for value in constraint if value in id_keys]
         for id_key in constraint_keys:
@@ -288,30 +254,33 @@ def add_column(matrix, component_id):
 
 
 # a function that gets the name of each false constraint and calls the corresponding function to handle it
-def handle_false_constraints(false_constraints, matrix, component_id):
+def handle_false_constraints(false_constraints, new_matrix, initial_matrix, component_id, constraints_list):
     for constraint in false_constraints:
         constraint_name = constraint['type']
-        matrix = eval(f'handle_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
-    return matrix
+        new_matrix = eval(
+            f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, initial_matrix, component_id, "
+                                                  "constraints_list)")
+    return new_matrix
 
 
 # a function that handles the false constraints until we have a matrix that satisfies all of them
-def get_final_matrix(matrix, component_id, component_constraints):
+def get_final_matrix(matrix, component_id, component_constraints, constraints_list):
+    initial_matrix = deepcopy(matrix)
     matrix = add_column(matrix, component_id)
     false_constraints = check_constraints(component_constraints, matrix, component_id)
     while false_constraints:
-        matrix = handle_false_constraints(false_constraints, matrix, component_id)
+        matrix = handle_false_constraints(false_constraints, matrix, initial_matrix, component_id, constraints_list)
         false_constraints = check_constraints(component_constraints, matrix, component_id)
     return matrix
 
 
 # a function that returns a list containing the resource that each of the new components consume
 # for each machine we have a dictionary with the sum of resources on that machine, all of those held in a list
-def get_new_resources(matrix):
+def get_new_resources(new_matrix, initial_matrix):
     new_components_resources = []
     resources_keys = [key for key in components[0] if key != 'Name']
-    for column in range(len(assignment_matrix[0]), len(matrix[0])):
-        deployed_components_id = get_deployed_components(matrix, column)
+    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+        deployed_components_id = get_deployed_components(new_matrix, column)
         components_dict = [components[index] for index in deployed_components_id]
         machine_resources = {resource: 0 for resource in resources_keys}
         for component in components_dict:
@@ -343,20 +312,23 @@ def choose_machine(offers_list, components_resources):
     return new_machines
 
 
-def greedy(component_id):
-    component_constraints = get_component_constraints(component_id)
+def greedy(solution, components_list, component_id, constraints_list, offers_list):
+    assignment_matrix = solution['Assignment Matrix']
+    vm_types = solution["Type Array"]
+    prices = solution["Price Array"]
+    component_constraints = get_component_constraints(component_id, constraints_list)
     for column in range(len(assignment_matrix[component_id])):
-        if check_column_placement(assignment_matrix, column, component_id):
-            free_space = get_free_space(vm_types[column], assignment_matrix, column)
-            if check_enough_space(free_space, component_id):
+        if check_column_placement(assignment_matrix, column, component_id, constraints_list):
+            free_space = get_free_space(vm_types[column], assignment_matrix, column, offers_list, components_list)
+            if check_enough_space(free_space, component_id, components_list):
                 new_matrix = deepcopy(assignment_matrix)
                 new_matrix[component_id][column] = 1
                 if check_constraints(component_constraints, new_matrix, component_id):
                     return new_matrix, vm_types, prices
             else:
                 new_matrix = deepcopy(assignment_matrix)
-                new_matrix = get_final_matrix(new_matrix, component_id, component_constraints)
-                new_components_resources = get_new_resources(new_matrix)
+                new_matrix = get_final_matrix(new_matrix, component_id, component_constraints, constraints_list)
+                new_components_resources = get_new_resources(new_matrix, assignment_matrix)
                 sorted_offers = sort_offers(offers)
                 new_machines_id = choose_machine(sorted_offers, new_components_resources)
                 for machine_id in new_machines_id:
@@ -369,30 +341,26 @@ if __name__ == '__main__':
     # initialize global variables
     components = get_components("Wordpress3.json")
 
-    offers = get_offers("offers_20.json")
-
-    prices = get_prices("Wordpress3_Offers20_Input.json")
-
-    assignment_matrix = get_assignment_matrix("Wordpress3_Offers20_Input.json")
-
-    vm_types = get_vm_types("Wordpress3_Offers20_Input.json")
-
-    added_component = get_added_component("Wordpress3_Offers20_Input.json")
-
     constraints = get_constraints("Wordpress3.json")
 
-    # existing_solution = parse_existing_solution(file)
-    # output wordpress3_offers20 - contine new matrix, types, price
+    offers = get_offers("offers_20.json")
 
-    # greedy(existing solution, components_list, component_id, offers_list)
-    # fisier de input general
-    # var. globale
+    existing_solution = parse_existing_solution("Wordpress3_Offers20_Input.json")
+
+    comp_id = existing_solution['Added Component']
+
+    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components, comp_id, constraints,
+                                                                  offers)
+
+    # existing_solution = parse_existing_solution(file) ✓
+    # output wordpress3_offers20 - contine new matrix, types, price
+    # greedy(existing solution, components_list, component_id, offers_list)✓
+    # fisier de input general ✓
+    # var. globale ✓
     # output csv/json
-    # split input file : application, offers, wordpress3_offers20.json
+    # split input file : application, offers, wordpress3_offers20.json ✓
     # impossible constraint -> explain why plus output
     # minizinc python
-
-    new_assignment_matrix, new_vm_types, new_price_array = greedy(0)
 
     for row in new_assignment_matrix:
         print(row)
