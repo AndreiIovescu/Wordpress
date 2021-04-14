@@ -115,32 +115,52 @@ def check_provide(constraint, matrix, component_id):
 
 
 # a function that tries to fix a provide constraint that is false
-def handle_provide(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+def handle_provide(constraint, new_matrix, types, component_id, components_list,
+                   constraints_list, offers_list, initial_matrix):
     if constraint['alphaCompId'] == component_id:
         problem_component_id = constraint['betaCompId']
     else:
         problem_component_id = constraint['alphaCompId']
     # we try to place the new component on any new machine besides the original ones
-    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
-        if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
-            new_matrix[problem_component_id][column] = 1
-            return new_matrix
+    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+    new_component_column = check_existing_machines(initial_matrix, types, component_id,
+                                                   components_list, constraints_list, offers_list)
+    if new_component_column >= 0:
+        new_matrix[problem_component_id][new_component_column] = 1
+        return new_matrix
+
+    if new_columns > 0:
+        for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+            if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+                new_matrix[problem_component_id][column] = 1
+                return new_matrix
+
     # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
     matrix = add_column(new_matrix, problem_component_id)
     return matrix
 
 
 # a function that tries to fix a require_provide constraint that is false
-def handle_require_provide(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
+                           constraints_list, offers_list, initial_matrix):
     if constraint['betaCompId'] == component_id:
         problem_component_id = constraint['alphaCompId']
     else:
         problem_component_id = constraint['betaCompId']
     # we try to place the new component on any new machine besides the original ones
-    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
-        if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
-            new_matrix[problem_component_id][column] = 1
-            return new_matrix
+    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+    new_component_column = check_existing_machines(initial_matrix, types, component_id,
+                                                   components_list, constraints_list, offers_list)
+    if new_component_column >= 0:
+        new_matrix[problem_component_id][new_component_column] = 1
+        return new_matrix
+
+    if new_columns > 0:
+        for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+            if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+                new_matrix[problem_component_id][column] = 1
+                return new_matrix
+
     # if we can't place it on an existing machine, we add a new one, with the problem component deployed on it
     matrix = add_column(new_matrix, problem_component_id)
     return matrix
@@ -258,22 +278,23 @@ def add_column(matrix, component_id):
 
 
 # a function that gets the name of each false constraint and calls the corresponding function to handle it
-def handle_false_constraints(false_constraints, new_matrix, initial_matrix, component_id, constraints_list):
+def handle_false_constraints(false_constraints, new_matrix, types, component_id,
+                             components_list, constraints_list, offers_list, initial_matrix):
     for constraint in false_constraints:
         constraint_name = constraint['type']
         new_matrix = eval(
-            f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, initial_matrix, component_id, "
-                                                  "constraints_list)")
+            f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, types, component_id, "
+                                                  "components_list, constraints_list, offers_list, initial_matrix)")
     return new_matrix
 
 
 # a function that handles the false constraints until we have a matrix that satisfies all of them
-def get_final_matrix(matrix, component_id, component_constraints, constraints_list):
-    initial_matrix = deepcopy(matrix)
-    matrix = add_column(matrix, component_id)
+def get_final_matrix(matrix, types, component_id, components_list, component_constraints,
+                     constraints_list, offers_list, initial_matrix):
     false_constraints = check_constraints(component_constraints, matrix, component_id)
     while false_constraints:
-        matrix = handle_false_constraints(false_constraints, matrix, initial_matrix, component_id, constraints_list)
+        matrix = handle_false_constraints(false_constraints, matrix, types, component_id,
+                                          components_list, constraints_list, offers_list, initial_matrix)
         false_constraints = check_constraints(component_constraints, matrix, component_id)
     return matrix
 
@@ -316,7 +337,7 @@ def choose_machine(offers_list, components_resources):
     return new_machines
 
 
-def check_existing_machines(matrix, types_array, components_list, component_id, constraints_list, offers_list):
+def check_existing_machines(matrix, types_array, component_id, components_list, constraints_list, offers_list):
     for column in range(len(matrix[component_id])):
         if check_column_placement(matrix, column, component_id, constraints_list):
             free_space = get_free_space(types_array[column], matrix, column, offers_list, components_list)
@@ -331,8 +352,8 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
     prices = solution["Price Array"]
     component_constraints = get_component_constraints(component_id, constraints_list)
 
-    new_component_column = check_existing_machines(assignment_matrix, vm_types, components_list,
-                                                   component_id, constraints_list, offers_list)
+    new_component_column = check_existing_machines(assignment_matrix, vm_types, component_id,
+                                                   components_list, constraints_list, offers_list)
 
     if new_component_column >= 0:
         """new_matrix = deepcopy(assignment_matrix)
@@ -341,7 +362,9 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
                            return new_matrix, vm_types, prices"""
     else:
         new_matrix = deepcopy(assignment_matrix)
-        new_matrix = get_final_matrix(new_matrix, component_id, component_constraints, constraints_list)
+        new_matrix = add_column(new_matrix, component_id)
+        new_matrix = get_final_matrix(new_matrix, vm_types, component_id, components_list, component_constraints,
+                                      constraints_list, offers_list, assignment_matrix)
         new_components_resources = get_new_resources(new_matrix, assignment_matrix)
         sorted_offers = sort_offers(offers)
         new_machines_id = choose_machine(sorted_offers, new_components_resources)
