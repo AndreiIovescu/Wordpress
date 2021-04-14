@@ -346,6 +346,15 @@ def check_existing_machines(matrix, types_array, component_id, components_list, 
     return -1
 
 
+def place_on_existing_machine(matrix, types, component_id, components_list, component_constraints,
+                              constraints_list, offers_list, initial_matrix, column):
+    new_matrix = deepcopy(matrix)
+    new_matrix[component_id][column] = 1
+    new_matrix = get_final_matrix(new_matrix, types, component_id, components_list, component_constraints,
+                                  constraints_list, offers_list, initial_matrix)
+    return new_matrix
+
+
 def greedy(solution, components_list, component_id, constraints_list, offers_list):
     assignment_matrix = solution['Assignment Matrix']
     vm_types = solution["Type Array"]
@@ -356,10 +365,12 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
                                                    components_list, constraints_list, offers_list)
 
     if new_component_column >= 0:
-        """new_matrix = deepcopy(assignment_matrix)
-                       new_matrix[component_id][column] = 1
-                       if check_constraints(component_constraints, new_matrix, component_id):
-                           return new_matrix, vm_types, prices"""
+        new_matrix = deepcopy(assignment_matrix)
+        new_matrix = place_on_existing_machine(new_matrix, vm_types, component_id,
+                                               components_list, component_constraints, constraints_list,
+                                               offers_list, assignment_matrix, new_component_column)
+        # to do 
+
     else:
         new_matrix = deepcopy(assignment_matrix)
         new_matrix = add_column(new_matrix, component_id)
