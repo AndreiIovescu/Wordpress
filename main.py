@@ -316,37 +316,46 @@ def choose_machine(offers_list, components_resources):
     return new_machines
 
 
+def check_existing_machines(matrix, types_array, components_list, component_id, constraints_list, offers_list):
+    for column in range(len(matrix[component_id])):
+        if check_column_placement(matrix, column, component_id, constraints_list):
+            free_space = get_free_space(types_array[column], matrix, column, offers_list, components_list)
+            if check_enough_space(free_space, component_id, components_list):
+                return column
+    return -1
+
+
 def greedy(solution, components_list, component_id, constraints_list, offers_list):
     assignment_matrix = solution['Assignment Matrix']
     vm_types = solution["Type Array"]
     prices = solution["Price Array"]
     component_constraints = get_component_constraints(component_id, constraints_list)
 
-    for column in range(len(assignment_matrix[component_id])):
-        if check_column_placement(assignment_matrix, column, component_id, constraints_list):
-            free_space = get_free_space(vm_types[column], assignment_matrix, column, offers_list, components_list)
-            if check_enough_space(free_space, component_id, components_list):
-                new_matrix = deepcopy(assignment_matrix)
-                new_matrix[component_id][column] = 1
-                if check_constraints(component_constraints, new_matrix, component_id):
-                    return new_matrix, vm_types, prices
-            else:
-                new_matrix = deepcopy(assignment_matrix)
-                new_matrix = get_final_matrix(new_matrix, component_id, component_constraints, constraints_list)
-                new_components_resources = get_new_resources(new_matrix, assignment_matrix)
-                sorted_offers = sort_offers(offers)
-                new_machines_id = choose_machine(sorted_offers, new_components_resources)
-                for machine_id in new_machines_id:
-                    vm_types.append(machine_id)
-                    prices.append(offers[machine_id]['Price'])
-                output_dictionary = {
-                    'Assignment Matrix': new_matrix,
-                    'Type Array': vm_types,
-                    'Price Array': prices
-                }
-                with open("Wordpress3_Offers20_Output.json", "w") as f:
-                    f.write(json.dumps(output_dictionary))
-                return new_matrix, vm_types, prices
+    new_component_column = check_existing_machines(assignment_matrix, vm_types, components_list,
+                                                   component_id, constraints_list, offers_list)
+
+    if new_component_column >= 0:
+        """new_matrix = deepcopy(assignment_matrix)
+                       new_matrix[component_id][column] = 1
+                       if check_constraints(component_constraints, new_matrix, component_id):
+                           return new_matrix, vm_types, prices"""
+    else:
+        new_matrix = deepcopy(assignment_matrix)
+        new_matrix = get_final_matrix(new_matrix, component_id, component_constraints, constraints_list)
+        new_components_resources = get_new_resources(new_matrix, assignment_matrix)
+        sorted_offers = sort_offers(offers)
+        new_machines_id = choose_machine(sorted_offers, new_components_resources)
+        for machine_id in new_machines_id:
+            vm_types.append(machine_id)
+            prices.append(offers[machine_id]['Price'])
+        output_dictionary = {
+            'Assignment Matrix': new_matrix,
+            'Type Array': vm_types,
+            'Price Array': prices
+        }
+        with open("Wordpress3_Offers20_Output.json", "w") as f:
+            f.write(json.dumps(output_dictionary))
+        return new_matrix, vm_types, prices
 
 
 if __name__ == '__main__':
@@ -361,8 +370,8 @@ if __name__ == '__main__':
 
     comp_id = existing_solution['Added Component']
 
-    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components, comp_id,
-                                                                  constraints, offers)
+    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components,
+                                                                  comp_id, constraints, offers)
 
     # existing_solution = parse_existing_solution(file) ✓
     # output wordpress3_offers20 - contine new matrix, types, price ✓
