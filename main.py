@@ -146,6 +146,10 @@ def handle_require_provide(constraint, new_matrix, initial_matrix, component_id,
     return matrix
 
 
+def handle_upper_bound(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+    pass
+
+
 # function that returns for a given component all the conflicts
 # it checks the conflicts dictionary for both keys and values, adding them to the conflict array for that component
 def get_component_conflicts(component_id, constraints_list):
@@ -317,6 +321,7 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
     vm_types = solution["Type Array"]
     prices = solution["Price Array"]
     component_constraints = get_component_constraints(component_id, constraints_list)
+
     for column in range(len(assignment_matrix[component_id])):
         if check_column_placement(assignment_matrix, column, component_id, constraints_list):
             free_space = get_free_space(vm_types[column], assignment_matrix, column, offers_list, components_list)
@@ -368,6 +373,7 @@ if __name__ == '__main__':
     # split input file : application, offers, wordpress3_offers20.json ✓
     # impossible constraint -> explain why plus output
     # minizinc python
+    # sort offers
 
     for row in new_assignment_matrix:
         print(row)
