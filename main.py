@@ -355,6 +355,35 @@ def place_on_existing_machine(matrix, types, component_id, components_list, comp
     return new_matrix
 
 
+def get_solution(matrix, initial_matrix, types, prices, offers_list):
+    new_components_resources = get_new_resources(matrix, initial_matrix)
+
+    if not new_components_resources:
+        output_dictionary = {
+            'Assignment Matrix': matrix,
+            'Type Array': types,
+            'Price Array': prices
+        }
+        return output_dictionary
+
+    sorted_offers = sort_offers(offers_list)
+    new_machines_id = choose_machine(sorted_offers, new_components_resources)
+    for machine_id in new_machines_id:
+        types.append(machine_id)
+        prices.append(offers_list[machine_id]['Price'])
+    output_dictionary = {
+        'Assignment Matrix': matrix,
+        'Type Array': types,
+        'Price Array': prices
+    }
+    return output_dictionary
+
+
+def write_solution_to_file(file, dictionary):
+    with open(file, "W") as f:
+        f.write(json.dumps(dictionary))
+
+
 def greedy(solution, components_list, component_id, constraints_list, offers_list):
     assignment_matrix = solution['Assignment Matrix']
     vm_types = solution["Type Array"]
@@ -369,8 +398,8 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
         new_matrix = place_on_existing_machine(new_matrix, vm_types, component_id,
                                                components_list, component_constraints, constraints_list,
                                                offers_list, assignment_matrix, new_component_column)
-        # to do 
-
+        output_dictionary = get_solution(new_matrix, assignment_matrix, vm_types, prices, offers_list)
+        write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
     else:
         new_matrix = deepcopy(assignment_matrix)
         new_matrix = add_column(new_matrix, component_id)
