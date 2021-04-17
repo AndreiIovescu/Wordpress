@@ -460,7 +460,6 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
 
 
 if __name__ == '__main__':
-    # initialize global variables
     components = get_components("Wordpress3.json")
 
     constraints = get_constraints("Wordpress3.json")
