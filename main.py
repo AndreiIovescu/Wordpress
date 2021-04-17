@@ -357,20 +357,13 @@ def sort_offers(offers_list):
 
 def choose_machine(offers_list, components_resources):
     new_machines = []
+    sorted_offers = deepcopy(offers_list)
+    sorted_offers = sort_offers(sorted_offers)
     for machine_resources in components_resources:
-        matching_offers = [offer for offer in offers_list if offer['Cpu'] >= machine_resources['Cpu']
+        matching_offers = [offer for offer in sorted_offers if offer['Cpu'] >= machine_resources['Cpu']
                            and offer['Memory'] >= machine_resources['Memory']
                            and offer['Storage'] >= machine_resources['Storage']]
-        for offer in matching_offers:
-            is_good = True
-            for key in offer:
-                if key != 'Price':
-                    if offer[key] < machine_resources[key]:
-                        is_good = False
-                        break
-            if is_good:
-                new_machines.append(offers.index(offer))
-                break
+        new_machines.append(offers_list.index(matching_offers[0]))
     return new_machines
 
 
@@ -413,8 +406,7 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list):
         return output_dictionary
 
     # If we needed new machines for deployment, we now have to choose the new machines type
-    sorted_offers = sort_offers(offers_list)
-    new_machines_id = choose_machine(sorted_offers, new_components_resources)
+    new_machines_id = choose_machine(offers_list, new_components_resources)
     for machine_id in new_machines_id:
         types.append(machine_id)
         prices.append(offers_list[machine_id]['Price'])
