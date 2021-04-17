@@ -337,6 +337,7 @@ def get_final_matrix(matrix, types, component_id, components_list, component_con
 def get_new_resources(new_matrix, initial_matrix):
     new_components_resources = []
     resources_keys = [key for key in components[0] if key != 'Name']
+    # We check only the new machines
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components_id = get_deployed_components(new_matrix, column)
         components_dict = [components[index] for index in deployed_components_id]
@@ -348,7 +349,7 @@ def get_new_resources(new_matrix, initial_matrix):
     return new_components_resources
 
 
-#
+# Sorts the received list in ascending order after the cpu, then after the memory, etc
 def sort_offers(offers_list):
     sorted_list = sorted(offers_list, key=lambda i: (i['Cpu'], i['Memory'], i['Storage'], i['Price']))
     return sorted_list
@@ -357,7 +358,10 @@ def sort_offers(offers_list):
 def choose_machine(offers_list, components_resources):
     new_machines = []
     for machine_resources in components_resources:
-        for offer in offers_list:
+        matching_offers = [offer for offer in offers_list if offer['Cpu'] >= machine_resources['Cpu']
+                           and offer['Memory'] >= machine_resources['Memory']
+                           and offer['Storage'] >= machine_resources['Storage']]
+        for offer in matching_offers:
             is_good = True
             for key in offer:
                 if key != 'Price':
