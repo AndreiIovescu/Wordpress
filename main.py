@@ -323,7 +323,6 @@ def add_column(matrix, component_id):
 # A function that gets the name of each false constraint and calls the corresponding function to handle it
 def handle_false_constraints(false_constraints, new_matrix, types, component_id,
                              components_list, constraints_list, offers_list, initial_matrix):
-
     result = None
     for constraint in false_constraints:
         constraint_name = constraint['type']
@@ -343,11 +342,13 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
 # A function that handles the false constraints until we have a matrix that satisfies all the constraints
 def get_final_matrix(matrix, types, component_id, components_list, component_constraints,
                      constraints_list, offers_list, initial_matrix):
-
     false_constraints = check_constraints(component_constraints, matrix, component_id)
     while false_constraints:
         matrix = handle_false_constraints(false_constraints, matrix, types, component_id,
                                           components_list, constraints_list, offers_list, initial_matrix)
+        # After every attempt of fixing false constraints we want to see if the handling was able to run
+        # If all went ok, then matrix will be the expected way, but if we were not able to fix then it's type is str
+        # It will contain the error message regarding what went wrong
         if type(matrix) == str:
             return matrix
         false_constraints = check_constraints(component_constraints, matrix, component_id)
