@@ -348,6 +348,8 @@ def get_final_matrix(matrix, types, component_id, components_list, component_con
     while false_constraints:
         matrix = handle_false_constraints(false_constraints, matrix, types, component_id,
                                           components_list, constraints_list, offers_list, initial_matrix)
+        if type(matrix) == str:
+            return matrix
         false_constraints = check_constraints(component_constraints, matrix, component_id)
     return matrix
 
