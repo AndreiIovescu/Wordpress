@@ -185,8 +185,21 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
     return matrix
 
 
+# A function that will return a message to inform the user that the maximum number of component with provided id
+# was already deployed, therefore we can no longer deploy an instance of that component
 def handle_upper_bound(constraint, new_matrix, initial_matrix, component_id, constraints_list):
-    pass
+    return f"Upper bound reached for the component with id {component_id}. No more instances can be deployed."
+
+
+# A function that will inform the user that he wants to add a component that cannot be deployed.
+# Components that are in exclusive deployment cannot be deployed in the application together
+def handle_exclusive_deployment(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+    if constraint['alphaCompId'] == component_id:
+        problem_component_id = constraint['betaCompId']
+    else:
+        problem_component_id = constraint['alphaCompId']
+    return f"Cannot deploy component with id {component_id} in the application. " \
+           f"Component with id {problem_component_id} is deployed and they are in exclusive deployment relation."
 
 
 # Function that returns all the conflicts for a given component
