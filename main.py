@@ -198,6 +198,13 @@ def handle_upper_bound(constraint, new_matrix, initial_matrix, component_id, con
     return f"Upper bound reached for the component with id {component_id}. No more instances can be deployed."
 
 
+# A function that will return a message to inform the user that the component with provided id
+# Must have an exact number of instances
+def handle_equal_bound(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+    return f"Cannot deploy another instance of component with id {component_id}. There should be exactly" \
+           f" {constraint['bound']} instances of this component."
+
+
 # A function that will inform the user that he wants to add a component that cannot be deployed.
 # Components that are in exclusive deployment cannot be deployed in the application together
 def handle_exclusive_deployment(constraint, new_matrix, initial_matrix, component_id, constraints_list):
