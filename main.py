@@ -153,14 +153,12 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
 #
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
                        constraints_list, offers_list, initial_matrix):
-
     pass
 
 
 #
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
-
     pass
 
 
@@ -435,10 +433,15 @@ def choose_machine(offers_list, components_resources):
     new_machines = []
     sorted_offers = deepcopy(offers_list)
     sorted_offers = sort_offers(sorted_offers)
+
     for machine_resources in components_resources:
-        matching_offers = [offer for offer in sorted_offers if offer['Cpu'] >= machine_resources['Cpu']
-                           and offer['Memory'] >= machine_resources['Memory']
-                           and offer['Storage'] >= machine_resources['Storage']]
+        matching_offers = [
+            offer for offer in sorted_offers
+            if offer['Cpu'] >= machine_resources['Cpu']
+            and offer['Memory'] >= machine_resources['Memory']
+            and offer['Storage'] >= machine_resources['Storage']
+        ]
+
         new_machines.append(offers_list.index(matching_offers[0]))
     return new_machines
 
