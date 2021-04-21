@@ -159,7 +159,7 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
         deployed_components = get_deployed_components(new_matrix, column)
         if constraint['alphaCompId'] in deployed_components:
             new_matrix[constraint['betaCompId']][column] = 1
-        else:
+        elif constraint['betaCompId'] in deployed_components:
             new_matrix[constraint['alphaCompId']][column] = 1
     return new_matrix
 
