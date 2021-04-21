@@ -59,7 +59,7 @@ def compute_frequency(component_id, matrix):
 
 # Checks on each machine if the component with parameter id and his conflict are both deployed
 # Returns true if no such conflict exists
-def check_conflicts(constraint, matrix, component_id):
+def check_conflicts(constraint, matrix, component_id, constraints_list):
     conflict_component_id = constraint['alphaCompId']
     for column in range(len(matrix[0])):
         conflict_component_deployed = False
@@ -75,28 +75,28 @@ def check_conflicts(constraint, matrix, component_id):
 
 
 # Checks whether the component with provided id is deployed at least 'bound' times
-def check_lower_bound(constraint, matrix, component_id):
+def check_lower_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(component_id, matrix) >= constraint['bound']:
         return True
     return False
 
 
 # Checks whether the component with provided id is deployed at most 'bound' times
-def check_upper_bound(constraint, matrix, component_id):
+def check_upper_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(component_id, matrix) <= constraint['bound']:
         return True
     return False
 
 
 # Checks whether the component with provided id is deployed exactly 'bound' times
-def check_equal_bound(constraint, matrix, component_id):
+def check_equal_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(component_id, matrix) == constraint['bound']:
         return True
     return False
 
 
 # This function checks whether the components with the provided id are both deployed in the system
-def check_exclusive_deployment(constraint, matrix, component_id):
+def check_exclusive_deployment(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
             and compute_frequency(constraint['betaCompId'], matrix) > 0:
         return False
@@ -106,7 +106,7 @@ def check_exclusive_deployment(constraint, matrix, component_id):
 # This function verifies that the numerical constraint between two components is respected
 # Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
 # This is a require provide constraint since we have limitations for both 'require' and 'provider'
-def check_require_provide(constraint, matrix, component_id):
+def check_require_provide(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) * constraint['alphaCompIdInstances'] <= \
             compute_frequency(constraint['betaCompId'], matrix) * constraint['betaCompIdInstances']:
         return True
@@ -116,7 +116,7 @@ def check_require_provide(constraint, matrix, component_id):
 # This function is similar to require provide, but this time we have no knowledge about one component in the relation
 # Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
 # We know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
-def check_provide(constraint, matrix, component_id):
+def check_provide(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) == 0 \
             or compute_frequency(constraint['betaCompId'], matrix) == 0:
         return True
@@ -128,11 +128,33 @@ def check_provide(constraint, matrix, component_id):
 
 # This function checks whether two components are in collocation relation.
 # A collocation relation means that on every machine where one of the components is deployed, the other one must be too.
-def check_collocation(constraint, matrix, component_id):
+def check_collocation(constraint, matrix, component_id, constraints_list):
     for column in range(len(matrix[0])):
         if matrix[constraint['alphaCompId']][column] != matrix[constraint['betaCompId']][column]:
             return False
     return True
+
+
+# This function checks that the component with provided id is deployed on every machine that allows it.
+# If there is a machine where the component would cause a conflict that machine is not included.
+def check_full_deployment(constraint, matrix, component_id, constraints_list):
+    conflicts = get_component_conflicts(component_id, constraints_list)
+    for column in range(len(matrix[0])):
+        deployed_components = get_deployed_components(matrix, column)
+        # We create a list with the elements that are deployed but are in conflict with the component
+        components_in_conflict = [component for component in deployed_components if component_id not in conflicts]
+        # If on any machine the component is not deployed, but there is no conflict to stop that, we return false
+        # The list being empty means that the component could actually be deployed on that machine
+        if matrix[component_id][column] == 0 and components_in_conflict is None:
+            return False
+    return True
+
+
+#
+def handle_collocation(constraint, new_matrix, types, component_id, components_list,
+                       constraints_list, offers_list, initial_matrix):
+
+    pass
 
 
 # A function that tries to fix a provide constraint that is false
@@ -323,7 +345,8 @@ def check_constraints(constraints_list, matrix, component_id):
         constraint_name = constraint['type']
         # Calls the the corresponding function using the constraint's name
         # The check functions all follow the convention: check_constraint_name
-        corresponding_function_result = eval(f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id)")
+        corresponding_function_result = eval(f'check_{constraint_name}'.lower()
+                                             + "(constraint, matrix, component_id, constraints_list)")
         if not corresponding_function_result:
             false_constraints.append(constraint)
     return false_constraints
