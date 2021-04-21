@@ -164,13 +164,20 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
     return new_matrix
 
 
-#
+# A function that will try to deploy the component with parameter id on any machine where it was not deployed.
+# It will do so only on the machine where no conflict would be created.
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
 
-    pass
+    conflict_components = get_component_conflicts(constraint['alphaCompId'], constraints_list)
+    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+        deployed_components = get_deployed_components(new_matrix, column)
+        deployed_but_conflict = [component for component in deployed_components if component in conflict_components]
+        if constraint['alphaCompId'] not in deployed_components and deployed_but_conflict is None:
+            new_matrix[constraint['alphaCompId']][column] = 1
+    return new_matrix
 
-
+ 
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix):
