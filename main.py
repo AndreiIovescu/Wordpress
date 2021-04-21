@@ -153,12 +153,20 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
 #
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
                        constraints_list, offers_list, initial_matrix):
-    pass
+
+    for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+        deployed_components = get_deployed_components(new_matrix, column)
+        if constraint['alphaCompId'] in deployed_components:
+            new_matrix[constraint['betaCompId']][column] = 1
+        else:
+            new_matrix[constraint['alphaCompId']][column] = 1
+    return new_matrix
 
 
 #
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
+
     pass
 
 
