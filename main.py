@@ -157,6 +157,13 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
     pass
 
 
+#
+def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
+                           constraints_list, offers_list, initial_matrix):
+
+    pass
+
+
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix):
@@ -420,7 +427,7 @@ def get_new_resources(new_matrix, initial_matrix):
 
 # Sorts the received list in ascending order after the cpu, then after the memory, etc
 def sort_offers(offers_list):
-    sorted_list = sorted(offers_list, key=lambda i: (i['Cpu'], i['Memory'], i['Storage'], i['Price']))
+    sorted_list = sorted(offers_list, key=lambda i: (i['Price']))
     return sorted_list
 
 
