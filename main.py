@@ -88,6 +88,13 @@ def check_upper_bound(constraint, matrix, component_id):
     return False
 
 
+# Checks whether the component with provided id is deployed exactly 'bound' times
+def check_equal_bound(constraint, matrix, component_id):
+    if compute_frequency(component_id, matrix) == constraint['bound']:
+        return True
+    return False
+
+
 # This function checks whether the components with the provided id are both deployed in the system
 def check_exclusive_deployment(constraint, matrix, component_id):
     if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
