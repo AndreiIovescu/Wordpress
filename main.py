@@ -314,8 +314,10 @@ def check_enough_space(free_space, component_id, components_list):
     # Resources will contain cpu, memory and storage
     resources = [resource for resource in components_list[component_id] if resource != 'Name']
     # Compute remaining space by subtracting the component requirements from the free space
-    remaining_space = [free_space[index] - components_list[component_id][resources[index]]
-                       for index in range(len(free_space))]
+    remaining_space = [
+        free_space[index] - components_list[component_id][resources[index]]
+        for index in range(len(free_space))
+    ]
     # If the space left for any of the requirements is smaller than 0, it means we don't have enough space
     for space in remaining_space:
         if space <= 0:
@@ -350,8 +352,9 @@ def check_constraints(constraints_list, matrix, component_id):
         constraint_name = constraint['type']
         # Calls the the corresponding function using the constraint's name
         # The check functions all follow the convention: check_constraint_name
-        corresponding_function_result = eval(f'check_{constraint_name}'.lower()
-                                             + "(constraint, matrix, component_id, constraints_list)")
+        corresponding_function_result = eval(
+            f'check_{constraint_name}'.lower() + "(constraint, matrix, component_id, constraints_list)"
+        )
         if not corresponding_function_result:
             false_constraints.append(constraint)
     return false_constraints
