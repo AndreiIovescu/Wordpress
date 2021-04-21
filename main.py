@@ -76,21 +76,21 @@ def check_conflicts(constraint, matrix, component_id, constraints_list):
 
 # Checks whether the component with provided id is deployed at least 'bound' times
 def check_lower_bound(constraint, matrix, component_id, constraints_list):
-    if compute_frequency(component_id, matrix) >= constraint['bound']:
+    if compute_frequency(constraint['compsIdList'][0], matrix) >= constraint['bound']:
         return True
     return False
 
 
 # Checks whether the component with provided id is deployed at most 'bound' times
 def check_upper_bound(constraint, matrix, component_id, constraints_list):
-    if compute_frequency(component_id, matrix) <= constraint['bound']:
+    if compute_frequency(constraint['compsIdList'][0], matrix) <= constraint['bound']:
         return True
     return False
 
 
 # Checks whether the component with provided id is deployed exactly 'bound' times
 def check_equal_bound(constraint, matrix, component_id, constraints_list):
-    if compute_frequency(component_id, matrix) == constraint['bound']:
+    if compute_frequency(constraint['compsIdList'][0], matrix) == constraint['bound']:
         return True
     return False
 
@@ -230,8 +230,10 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
 
 # A function that will return a message to inform the user that the maximum number of component with provided id
 # was already deployed, therefore we can no longer deploy an instance of that component
-def handle_upper_bound(constraint, new_matrix, initial_matrix, component_id, constraints_list):
-    return f"Upper bound reached for the component with id {component_id}. No more instances can be deployed."
+def handle_upper_bound(constraint, new_matrix, types, component_id, components_list,
+                       constraints_list, offers_list, initial_matrix):
+    return f"Upper bound reached for the component with id {constraint['compsIdList'][0]}." \
+           f"No more instances can be deployed."
 
 
 # A function that will return a message to inform the user that the component with provided id
@@ -396,7 +398,7 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
 # A function that handles the false constraints until we have a matrix that satisfies all the constraints
 def get_final_matrix(matrix, types, component_id, components_list, component_constraints,
                      constraints_list, offers_list, initial_matrix):
-    false_constraints = check_constraints(component_constraints, matrix, component_id)
+    false_constraints = check_constraints(constraints_list, matrix, component_id)
     while false_constraints:
         matrix = handle_false_constraints(false_constraints, matrix, types, component_id,
                                           components_list, constraints_list, offers_list, initial_matrix)
@@ -405,7 +407,7 @@ def get_final_matrix(matrix, types, component_id, components_list, component_con
         # It will contain the error message regarding what went wrong
         if type(matrix) == str:
             return matrix
-        false_constraints = check_constraints(component_constraints, matrix, component_id)
+        false_constraints = check_constraints(constraints_list, matrix, component_id)
     return matrix
 
 
