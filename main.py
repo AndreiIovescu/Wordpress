@@ -126,6 +126,15 @@ def check_provide(constraint, matrix, component_id):
     return False
 
 
+# This function checks whether two components are in collocation relation.
+# A collocation relation means that on every machine where one of the components is deployed, the other one must be too.
+def check_collocation(constraint, matrix, component_id):
+    for column in range(len(matrix[0])):
+        if matrix[constraint['alphaCompId']][column] != matrix[constraint['betaCompId']][column]:
+            return False
+    return True
+
+
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix):
