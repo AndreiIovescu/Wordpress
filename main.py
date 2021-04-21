@@ -383,16 +383,16 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
     for constraint in false_constraints:
         constraint_name = constraint['type']
         # All handling functions follow the convention: handle_constraint_name
-        result = eval(
+        new_matrix = eval(
             f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, types, component_id, "
                                                   "components_list, constraints_list, offers_list, initial_matrix)"
         )
         # We check after every handle function call if the false constraint can be fixed or not
         # In general result should be a new matrix, after fixing a constraint
-        # If the type of result is string, it means the constraint cannot be fixed and result is an error message
-        if type(result) == str:
-            return result
-    return result
+        # If the type of new matrix is string, it means the constraint cannot be fixed and result is an error message
+        if type(new_matrix) == str:
+            return new_matrix
+    return new_matrix
 
 
 # A function that handles the false constraints until we have a matrix that satisfies all the constraints
