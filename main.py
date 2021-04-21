@@ -558,16 +558,8 @@ if __name__ == '__main__':
     new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components,
                                                                   comp_id, constraints, offers)
 
-    # existing_solution = parse_existing_solution(file) ✓
-    # output wordpress3_offers20 - contine new matrix, types, price ✓
-    # greedy(existing solution, components_list, component_id, offers_list)✓
-    # fisier de input general ✓
-    # var. globale ✓
-    # output csv/json ✓
-    # split input file : application, offers, wordpress3_offers20.json ✓
-    # impossible constraint -> explain why plus output ✓
+    # TODO
     # minizinc python
-    # sort offers
 
     for row in new_assignment_matrix:
         print(row)
