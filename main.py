@@ -150,7 +150,8 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
     return True
 
 
-#
+# A function that will handle a collocation constraint that was broken.
+# We check all the new machines, and we add all the missing components
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
                        constraints_list, offers_list, initial_matrix):
 
