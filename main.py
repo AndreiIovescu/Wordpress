@@ -501,7 +501,11 @@ def check_existing_machines(matrix, types_array, component_id, components_list, 
         if check_column_placement(matrix, column, component_id, constraints_list):
             free_space = get_free_space(types_array[column], matrix, column, offers_list, components_list)
             if check_enough_space(free_space, component_id, components_list):
-                return column
+                test_matrix = deepcopy(matrix)
+                test_matrix[component_id][column] = 1
+                false_constraints = check_constraints(constraints_list, test_matrix, component_id)
+                if not false_constraints:
+                    return column
     return -1
 
 
@@ -565,14 +569,8 @@ def greedy(solution, components_list, component_id, constraints_list, offers_lis
 
     if new_component_column >= 0:
         new_matrix = deepcopy(assignment_matrix)
-        new_matrix = place_on_existing_machine(new_matrix, vm_types, component_id,
-                                               components_list, component_constraints, constraints_list,
-                                               offers_list, assignment_matrix, new_component_column)
-        if type(new_matrix) == str:
-            print(new_matrix)
-            return
-
-        output_dictionary = get_solution(new_matrix, assignment_matrix, vm_types, prices, offers_list)
+        new_matrix[component_id][new_component_column] = 1
+        output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types, prices, offers_list)
         write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
         return
     else:
