@@ -509,19 +509,6 @@ def check_existing_machines(matrix, types_array, component_id, components_list, 
     return -1
 
 
-# A function that will handle the case when we want to place the new component on the existing machine with id 'column'
-# It returns the assignment matrix that is considered to satisfy all the constraints
-def place_on_existing_machine(matrix, types, component_id, components_list, component_constraints,
-                              constraints_list, offers_list, initial_matrix, column):
-    new_matrix = deepcopy(matrix)
-    # We update the assignment matrix accordingly
-    new_matrix[component_id][column] = 1
-    # By calling the get final matrix method we make sure that we get a matrix that satisfies all constraints
-    new_matrix = get_final_matrix(new_matrix, types, component_id, components_list, component_constraints,
-                                  constraints_list, offers_list, initial_matrix)
-    return new_matrix
-
-
 # We can have 2 kinds of solution handling
 def get_solution(matrix, initial_matrix, types, prices, offers_list):
     new_components_resources = get_new_resources(matrix, initial_matrix)
