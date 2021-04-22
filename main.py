@@ -181,10 +181,24 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix):
-    if constraint['alphaCompId'] == component_id:
+
+    problem_component_id = None
+
+    for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
+        deployed_components = get_deployed_components(new_matrix, column)
+        if constraint['alphaCompId'] in deployed_components:
+            problem_component_id = constraint['betaCompId']
+            component_id = constraint['alphaCompId']
+            break
+        elif constraint['betaCompId'] in deployed_components:
+            problem_component_id = constraint['alphaCompId']
+            component_id = constraint['betaCompId']
+            break
+
+    """if constraint['alphaCompId'] == component_id:
         problem_component_id = constraint['betaCompId']
     else:
-        problem_component_id = constraint['alphaCompId']
+        problem_component_id = constraint['alphaCompId']"""
 
     # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
     new_columns = len(new_matrix[0]) - len(initial_matrix[0])
@@ -214,10 +228,23 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
 # A function that tries to fix a require_provide constraint that is false
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
-    if constraint['betaCompId'] == component_id:
+
+    problem_component_id = None
+
+    for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
+        deployed_components = get_deployed_components(new_matrix, column)
+        if constraint['alphaCompId'] in deployed_components:
+            problem_component_id = constraint['betaCompId']
+            component_id = constraint['alphaCompId']
+            break
+        elif constraint['betaCompId'] in deployed_components:
+            problem_component_id = constraint['alphaCompId']
+            component_id = constraint['betaCompId']
+            break
+    """if constraint['betaCompId'] == component_id:
         problem_component_id = constraint['alphaCompId']
     else:
-        problem_component_id = constraint['betaCompId']
+        problem_component_id = constraint['betaCompId']"""
 
     # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
     new_columns = len(new_matrix[0]) - len(initial_matrix[0])
