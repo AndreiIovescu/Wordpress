@@ -198,10 +198,7 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
     """if constraint['alphaCompId'] == component_id:
         problem_component_id = constraint['betaCompId']
     else:
-        problem_component_id = constraint['alphaCompId']"""
-
-    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
-    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+        problem_component_id = constraint['alphaCompId']
     # If we can place the new component on a machine the we already had
     # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
     new_component_column = check_existing_machines(initial_matrix, types, component_id,
@@ -210,8 +207,10 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
     # We don't have to check anything else, because we don't rent a new machine
     if new_component_column >= 0:
         new_matrix[problem_component_id][new_component_column] = 1
-        return new_matrix
+        return new_matrix"""
 
+    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
+    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
     # In case there are new machines, we don't actually know yet what kind of machine they are
     # At this step, we have to check on the new machines if we can place the new component, regarding the constraints
     if new_columns > 0:
@@ -244,10 +243,9 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
     """if constraint['betaCompId'] == component_id:
         problem_component_id = constraint['alphaCompId']
     else:
-        problem_component_id = constraint['betaCompId']"""
+        problem_component_id = constraint['betaCompId']
 
-    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
-    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+    
     # If we can place the new component on a machine the we already had
     # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
     new_component_column = check_existing_machines(initial_matrix, types, component_id,
@@ -256,8 +254,10 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
     # We don't have to check anything else, because we don't rent a new machine
     if new_component_column >= 0:
         new_matrix[problem_component_id][new_component_column] = 1
-        return new_matrix
+        return new_matrix"""
 
+    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
+    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
     # In case there are new machines, we don't actually know yet what kind of machine they are
     # At this step, we have to check on the new machines if we can place the new component, regarding the constraints
     if new_columns > 0:
