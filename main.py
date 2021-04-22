@@ -154,7 +154,6 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
 # We check all the new machines, and we add all the missing components
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
                        constraints_list, offers_list, initial_matrix):
-
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components = get_deployed_components(new_matrix, column)
         if constraint['alphaCompId'] in deployed_components and constraint['betaCompId'] not in deployed_components:
@@ -168,7 +167,6 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
 # It will do so only on the machine where no conflict would be created.
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
-
     conflict_components = get_component_conflicts(constraint['alphaCompId'], constraints_list)
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components = get_deployed_components(new_matrix, column)
@@ -177,11 +175,10 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
             new_matrix[constraint['alphaCompId']][column] = 1
     return new_matrix
 
- 
+
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix):
-
     problem_component_id = None
 
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
@@ -227,7 +224,6 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
 # A function that tries to fix a require_provide constraint that is false
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
-
     problem_component_id = None
 
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
@@ -545,7 +541,7 @@ def write_solution_to_file(file, dictionary):
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
-def greedy(solution, components_list, component_id, constraints_list, offers_list):
+def solve_problem(solution, components_list, component_id, constraints_list, offers_list):
     assignment_matrix = solution['Assignment Matrix']
     vm_types = solution["Type Array"]
     prices = solution["Price Array"]
@@ -585,8 +581,8 @@ if __name__ == '__main__':
 
     comp_id = existing_solution['Added Component']
 
-    new_assignment_matrix, new_vm_types, new_price_array = greedy(existing_solution, components,
-                                                                  comp_id, constraints, offers)
+    new_assignment_matrix, new_vm_types, new_price_array = solve_problem(existing_solution, components,
+                                                                         comp_id, constraints, offers)
 
     # TODO
     # minizinc python
