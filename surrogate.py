@@ -26,10 +26,10 @@ def write_csv(file, result_dict):
             writer.writerow({'wordpress_instances': key, 'vm_number': result_dict[key]})
 
 
-def get_surrogate_results(model, lower_bound, upper_bound):
+def get_surrogate_results(model, solver, lower_bound, upper_bound):
     solution_dict = {}
     for component_instances in range(lower_bound, upper_bound + 1):
-        solution = solve_surrogate_minizinc(model, component_instances, "chuffed")
+        solution = solve_surrogate_minizinc(model, component_instances, solver)
         solution_dict[component_instances] = solution['objective']
     return solution_dict
 
@@ -37,6 +37,6 @@ def get_surrogate_results(model, lower_bound, upper_bound):
 if __name__ == '__main__':
     Surrogate = "Wordpress_Surrogate.mzn"
 
-    surrogate_results = get_surrogate_results(Surrogate, 3, 12)
+    surrogate_results = get_surrogate_results(Surrogate, "chuffed", 3, 12)
 
     write_csv("Wordpress_Surrogate.csv", surrogate_results)
