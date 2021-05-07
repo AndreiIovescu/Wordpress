@@ -178,7 +178,7 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
 
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
-                   constraints_list, offers_list, initial_matrix):
+                   constraints_list, offers_list, initial_matrix, check_initial_matrix):
     problem_component_id = None
 
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
@@ -196,25 +196,28 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
         problem_component_id = constraint['betaCompId']
     else:
         problem_component_id = constraint['alphaCompId']"""
-    # If we can place the new component on a machine the we already had
-    # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
-    new_component_column = check_existing_machines(initial_matrix, types, component_id,
-                                                   components_list, constraints_list, offers_list)
-    # In case we can place the component on previous machines, we just update the assignment matrix accordingly
-    # We don't have to check anything else, because we don't rent a new machine
-    if new_component_column >= 0:
-        new_matrix[problem_component_id][new_component_column] = 1
-        return new_matrix
+    if check_initial_matrix == "Yes":
 
-    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
-    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
-    # In case there are new machines, we don't actually know yet what kind of machine they are
-    # At this step, we have to check on the new machines if we can place the new component, regarding the constraints
-    if new_columns > 0:
-        for column in range(len(initial_matrix[0]), len(new_matrix[0])):
-            if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
-                new_matrix[problem_component_id][column] = 1
-                return new_matrix
+        # If we can place the new component on a machine the we already had
+        # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
+        new_component_column = check_existing_machines(initial_matrix, types, component_id,
+                                                       components_list, constraints_list, offers_list)
+        # In case we can place the component on previous machines, we just update the assignment matrix accordingly
+        # We don't have to check anything else, because we don't rent a new machine
+        if new_component_column >= 0:
+            new_matrix[problem_component_id][new_component_column] = 1
+            return new_matrix
+
+        # With new columns we want to see if we work with the original matrix, or with a matrix with new
+        # machines/columns
+        new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+        # In case there are new machines, we don't actually know yet what kind of machine they are At this step,
+        # we have to check on the new machines if we can place the new component, regarding the constraints
+        if new_columns > 0:
+            for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+                if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+                    new_matrix[problem_component_id][column] = 1
+                    return new_matrix
 
     # If we can't place the component on what we already have, we have to get a new machine and update the matrix
     matrix = add_column(new_matrix, problem_component_id)
@@ -223,7 +226,7 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
 
 # A function that tries to fix a require_provide constraint that is false
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
-                           constraints_list, offers_list, initial_matrix):
+                           constraints_list, offers_list, initial_matrix, check_initial_matrix):
     problem_component_id = None
 
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
@@ -241,25 +244,27 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
     else:
         problem_component_id = constraint['betaCompId']"""
 
-    # If we can place the new component on a machine the we already had
-    # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
-    new_component_column = check_existing_machines(initial_matrix, types, component_id,
-                                                   components_list, constraints_list, offers_list)
-    # In case we can place the component on previous machines, we just update the assignment matrix accordingly
-    # We don't have to check anything else, because we don't rent a new machine
-    if new_component_column >= 0:
-        new_matrix[problem_component_id][new_component_column] = 1
-        return new_matrix
+    if check_initial_matrix == "Yes":
 
-    # With new columns we want to see if we work with the original matrix, or with a matrix with new machines/columns
-    new_columns = len(new_matrix[0]) - len(initial_matrix[0])
-    # In case there are new machines, we don't actually know yet what kind of machine they are
-    # At this step, we have to check on the new machines if we can place the new component, regarding the constraints
-    if new_columns > 0:
-        for column in range(len(initial_matrix[0]), len(new_matrix[0])):
-            if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
-                new_matrix[problem_component_id][column] = 1
-                return new_matrix
+        # If we can place the new component on a machine the we already had
+        # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
+        new_component_column = check_existing_machines(initial_matrix, types, component_id,
+                                                       components_list, constraints_list, offers_list)
+        # In case we can place the component on previous machines, we just update the assignment matrix accordingly
+        # We don't have to check anything else, because we don't rent a new machine
+        if new_component_column >= 0:
+            new_matrix[problem_component_id][new_component_column] = 1
+            return new_matrix
+
+        # With new columns we want to see if we work with the original matrix,or with a matrix with new machines/columns
+        new_columns = len(new_matrix[0]) - len(initial_matrix[0])
+        # In case there are new machines, we don't actually know yet what kind of machine they are
+        # At this step,we have to check on the new machines if we can place the new component, regarding the constraints
+        if new_columns > 0:
+            for column in range(len(initial_matrix[0]), len(new_matrix[0])):
+                if check_column_placement(new_matrix, column, problem_component_id, constraints_list):
+                    new_matrix[problem_component_id][column] = 1
+                    return new_matrix
 
     # If we can't place the component on what we already have, we have to get a new machine and update the matrix
     matrix = add_column(new_matrix, problem_component_id)
@@ -415,15 +420,15 @@ def add_column(matrix, component_id):
 
 
 # A function that gets the name of each false constraint and calls the corresponding function to handle it
-def handle_false_constraints(false_constraints, new_matrix, types, component_id,
-                             components_list, constraints_list, offers_list, initial_matrix):
+def handle_false_constraints(false_constraints, new_matrix, types, component_id, components_list,
+                             constraints_list, offers_list, initial_matrix, check_initial_matrix):
     result = None
     for constraint in false_constraints:
         constraint_name = constraint['type']
         # All handling functions follow the convention: handle_constraint_name
         new_matrix = eval(
-            f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, types, component_id, "
-                                                  "components_list, constraints_list, offers_list, initial_matrix)"
+            f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, types, component_id, components_list,"
+                                                  "constraints_list, offers_list, initial_matrix, check_initial_matrix)"
         )
         # We check after every handle function call if the false constraint can be fixed or not
         # In general result should be a new matrix, after fixing a constraint
@@ -435,11 +440,13 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
 
 # A function that handles the false constraints until we have a matrix that satisfies all the constraints
 def get_final_matrix(matrix, types, component_id, components_list, component_constraints,
-                     constraints_list, offers_list, initial_matrix):
+                     constraints_list, offers_list, initial_matrix, check_initial_matrix):
     false_constraints = check_constraints(constraints_list, matrix, component_id)
     while false_constraints:
-        matrix = handle_false_constraints(false_constraints, matrix, types, component_id,
-                                          components_list, constraints_list, offers_list, initial_matrix)
+        matrix = handle_false_constraints(
+            false_constraints, matrix, types, component_id,components_list,
+            constraints_list, offers_list, initial_matrix, check_initial_matrix
+        )
         # After every attempt of fixing false constraints we want to see if the handling was able to run
         # If all went ok, then matrix will be the expected way, but if we were not able to fix then it's type is str
         # It will contain the error message regarding what went wrong
@@ -534,7 +541,7 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list):
 
 # This function receives a file and a dictionary that contains the problem solution
 # It will write the solution in the file, using json convention
-def write_solution_to_file(file, dictionary):
+def write_solution_to_file(file, operation, dictionary):
     with open(file, "w") as f:
         f.write(json.dumps(dictionary))
 
@@ -553,20 +560,35 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
         new_matrix = deepcopy(assignment_matrix)
         new_matrix[component_id][new_component_column] = 1
         output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types, prices, offers_list)
-        write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
+        write_solution_to_file("Wordpress3_Offers20_Output.json", "w", output_dictionary)
         return
     else:
-        new_matrix = deepcopy(assignment_matrix)
-        new_matrix = add_column(new_matrix, component_id)
-        new_matrix = get_final_matrix(new_matrix, vm_types, component_id, components_list, component_constraints,
-                                      constraints_list, offers_list, assignment_matrix)
-        if type(new_matrix) == str:
-            print(new_matrix)
-            return
+        less_machines_matrix = deepcopy(assignment_matrix)
+        less_machines_matrix = add_column(less_machines_matrix, component_id)
+        less_machines_matrix = get_final_matrix(
+            less_machines_matrix, vm_types, component_id, components_list, component_constraints,
+            constraints_list, offers_list, assignment_matrix, "Yes"
+        )
 
-        output_dictionary = get_solution(new_matrix, assignment_matrix, vm_types, prices, offers_list)
-        write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
-        return new_matrix, vm_types, prices
+        if type(less_machines_matrix) == str:
+            print(less_machines_matrix)
+        else:
+            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, vm_types, prices, offers_list)
+            write_solution_to_file("Wordpress3_Offers20_Output.json", "w", output_dictionary)
+
+        one_comp_machines_matrix = deepcopy(assignment_matrix)
+        one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
+        one_comp_machines_matrix = get_final_matrix(
+            one_comp_machines_matrix, vm_types, component_id, components_list, component_constraints,
+            constraints_list, offers_list, assignment_matrix, "No"
+        )
+
+        if type(one_comp_machines_matrix) == str:
+            print(one_comp_machines_matrix)
+        else:
+            output_dictionary = get_solution(one_comp_machines_matrix, assignment_matrix, vm_types, prices, offers_list)
+            write_solution_to_file("Wordpress3_Offers20_Output.json", "a", output_dictionary)
+        return one_comp_machines_matrix, vm_types, prices
 
 
 if __name__ == '__main__':
