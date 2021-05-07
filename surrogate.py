@@ -3,13 +3,13 @@ import csv
 from minizinc import Instance, Model, Solver
 
 
-def solve_surrogate_minizinc(model_path, problem_instances_number):
+def solve_surrogate_minizinc(model_path, problem_instances_number, solver):
     # Load the model from the corresponding file
     surrogate = Model(model_path)
     # Find the solver configuration
-    chuffed = Solver.lookup("chuffed")
+    solver = Solver.lookup(solver)
     # Create an instance of the problem using the previous solver
-    instance = Instance(chuffed, surrogate)
+    instance = Instance(solver, surrogate)
     # Assign the number of wordpress instances to n
     instance["n"] = problem_instances_number
     result = instance.solve()
@@ -29,7 +29,7 @@ def write_csv(file, result_dict):
 def get_surrogate_results(model, lower_bound, upper_bound):
     solution_dict = {}
     for component_instances in range(lower_bound, upper_bound + 1):
-        solution = solve_surrogate_minizinc(model, component_instances)
+        solution = solve_surrogate_minizinc(model, component_instances, "chuffed")
         solution_dict[component_instances] = solution['objective']
     return solution_dict
 
