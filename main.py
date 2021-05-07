@@ -605,9 +605,6 @@ if __name__ == '__main__':
     new_assignment_matrix, new_vm_types, new_price_array = solve_problem(existing_solution, components,
                                                                          comp_id, constraints, offers)
 
-    # TODO
-    # minizinc python
-
     for row in new_assignment_matrix:
         print(row)
     print(new_vm_types)
