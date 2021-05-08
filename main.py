@@ -3,7 +3,7 @@ from copy import deepcopy
 
 
 # Reads the file received as parameter and builds the components list in the desired way
-# We use in the code just a component's name and the requirements for cpu, memory and storage
+# We use in code just a component's name and the requirements for cpu, memory and storage
 def get_components(file):
     with open(file) as f:
         components_list = []
