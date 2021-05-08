@@ -1,4 +1,3 @@
-import os
 import csv
 from minizinc import Instance, Model, Solver
 
