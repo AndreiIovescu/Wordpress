@@ -16,9 +16,9 @@ def solve_surrogate_minizinc(model_path, problem_instances_number, solver):
     return result
 
 
-def write_csv(file, result_dict):
+def write_csv(file, result_dict, component):
     with open(file, mode='w', newline='') as f:
-        fieldnames = ['wordpress_instances', 'vm_number']
+        fieldnames = [f'{component}_instances', 'vm_number']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
 
         writer.writeheader()
@@ -39,4 +39,4 @@ if __name__ == '__main__':
 
     surrogate_results = get_surrogate_results(Surrogate, "chuffed", 3, 12)
 
-    write_csv("Wordpress_Surrogate.csv", surrogate_results)
+    write_csv("Wordpress_Surrogate.csv", surrogate_results, "wordpress")
