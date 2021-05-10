@@ -1,3 +1,4 @@
+import csv
 import json
 from copy import deepcopy
 
@@ -550,8 +551,18 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list, components_
 # This function receives a file and a dictionary that contains the problem solution
 # It will write the solution in the file, using json convention
 def write_solution_to_file(file, dictionary):
-    with open(file, "w") as f:
-        f.write(json.dumps(dictionary))
+    with open(file, mode='w', newline='') as f:
+        fieldnames = ['Price min value', 'Price for each machine', 'Time']
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+        writer.writeheader()
+        min_price = sum(dictionary['Price Array'])
+        writer.writerow({'Price min value': min_price, 'Price for each machine': dictionary['Price Array'],
+                         'Time': 0})
+
+
+def solve_min_vm():
+    pass
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
@@ -590,6 +601,8 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Using the get final matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
+        solve_min_vm(assignment_matrix, component_id, vm_types, prices,
+                     components_list, component_constraints,constraints_list, offers_list )
         less_machines_matrix = deepcopy(assignment_matrix)
         less_machines_matrix = add_column(less_machines_matrix, component_id)
         less_machines_matrix = get_final_matrix(
@@ -604,7 +617,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
             new_price_array = deepcopy(prices)
             output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
                                              new_price_array, offers_list, components_list)
-            write_solution_to_file("Wordpress3_Offers20_MinVM.json", output_dictionary)
+            write_solution_to_file("Wordpress3_Offers20_MinVM.csv", output_dictionary)
 
         one_comp_machines_matrix = deepcopy(assignment_matrix)
         one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
@@ -620,7 +633,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
             new_price_array = deepcopy(prices)
             output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
                                              new_price_array, offers_list, components_list)
-            write_solution_to_file("Wordpress3_Offers20_DistinctVM.json", output_dictionary)
+            write_solution_to_file("Wordpress3_Offers20_DistinctVM.csv", output_dictionary)
         return output_dictionary
 
 

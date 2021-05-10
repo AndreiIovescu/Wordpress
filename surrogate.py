@@ -22,7 +22,7 @@ def write_csv(file, result_dict, component):
 
         writer.writeheader()
         for key in result_dict:
-            writer.writerow({'wordpress_instances': key, 'vm_number': result_dict[key]})
+            writer.writerow({f'{component}_instances': key, 'vm_number': result_dict[key]})
 
 
 def get_surrogate_results(model, solver, lower_bound, upper_bound):
