@@ -142,7 +142,10 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
     for column in range(len(matrix[0])):
         deployed_components = get_deployed_components(matrix, column)
         # We create a list with the elements that are deployed but are in conflict with the component
-        components_in_conflict = [component for component in deployed_components if component_id not in conflicts]
+        components_in_conflict = [
+                    component for component in deployed_components
+                    if constraint['alphaCompId'] not in conflicts
+        ]
         # If on any machine the component is not deployed, but there is no conflict to stop that, we return false
         # The list being empty means that the component could actually be deployed on that machine
         if matrix[constraint['alphaCompId']][column] == 0 and components_in_conflict is None:
