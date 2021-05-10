@@ -549,27 +549,36 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list):
 
 # This function receives a file and a dictionary that contains the problem solution
 # It will write the solution in the file, using json convention
-def write_solution_to_file(file, operation, dictionary):
+def write_solution_to_file(file, dictionary):
     with open(file, "w") as f:
         f.write(json.dumps(dictionary))
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
 def solve_problem(solution, components_list, component_id, constraints_list, offers_list):
+    # Load the necessary input from the existing solution
     assignment_matrix = solution['Assignment Matrix']
     vm_types = solution["Type Array"]
     prices = solution["Price Array"]
+    # Get the constraints that involve the added component
     component_constraints = get_component_constraints(component_id, constraints_list)
 
+    # If we can place the component on a machine that we already have, this will get the value of that machine's id
+    # In case there is no such machine, it will have value -1
     new_component_column = check_existing_machines(assignment_matrix, vm_types, component_id,
                                                    components_list, constraints_list, offers_list)
 
+    # Since we can place the component on existing machines, we just have to update the information we want to output
+    # We are interested in the new assignment matrix, price array and vm types array
     if new_component_column >= 0:
         new_matrix = deepcopy(assignment_matrix)
         new_matrix[component_id][new_component_column] = 1
         output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types, prices, offers_list)
-        write_solution_to_file("Wordpress3_Offers20_Output.json", "w", output_dictionary)
+        write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
         return
+    # If we reach here it means we will need at least 1 new machine (for the added component)
+    # Using the get final matrix method we find out either the new assignment matrix or an error message
+    # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
         less_machines_matrix = deepcopy(assignment_matrix)
         less_machines_matrix = add_column(less_machines_matrix, component_id)
@@ -581,8 +590,11 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
         if type(less_machines_matrix) == str:
             print(less_machines_matrix)
         else:
-            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, vm_types, prices, offers_list)
-            write_solution_to_file("Wordpress3_Offers20_Output.json", "w", output_dictionary)
+            new_vm_types = deepcopy(vm_types)
+            new_price_array = deepcopy(prices)
+            output_dictionary = get_solution(less_machines_matrix, assignment_matrix,
+                                             new_vm_types, new_price_array, offers_list)
+            write_solution_to_file("Wordpress3_Offers20_MinVM.json", output_dictionary)
 
         one_comp_machines_matrix = deepcopy(assignment_matrix)
         one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
@@ -594,8 +606,11 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
         if type(one_comp_machines_matrix) == str:
             print(one_comp_machines_matrix)
         else:
-            output_dictionary = get_solution(one_comp_machines_matrix, assignment_matrix, vm_types, prices, offers_list)
-            write_solution_to_file("Wordpress3_Offers20_Output.json", "a", output_dictionary)
+            new_vm_types = deepcopy(vm_types)
+            new_price_array = deepcopy(prices)
+            output_dictionary = get_solution(less_machines_matrix, assignment_matrix,
+                                             new_vm_types, new_price_array, offers_list)
+            write_solution_to_file("Wordpress3_Offers20_DistinctVM.json", output_dictionary)
         return one_comp_machines_matrix, vm_types, prices
 
 
