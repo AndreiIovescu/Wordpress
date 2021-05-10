@@ -561,6 +561,16 @@ def write_solution_to_file(file, dictionary):
                          'Time': 0})
 
 
+def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
+                            components_list, new_component_column, offers_list):
+    new_matrix = deepcopy(assignment_matrix)
+    new_matrix[component_id][new_component_column] = 1
+    output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
+                                     prices, offers_list, components_list)
+    write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
+    return
+
+    
 def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
                  components_list, component_constraints,constraints_list, offers_list):
 
@@ -629,11 +639,8 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Since we can place the component on existing machines, we just have to update the information we want to output
     # We are interested in the new assignment matrix, price array and vm types array
     if new_component_column >= 0:
-        new_matrix = deepcopy(assignment_matrix)
-        new_matrix[component_id][new_component_column] = 1
-        output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
-                                         prices, offers_list, components_list)
-        write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
+        solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
+                                components_list, new_component_column, offers_list)
         return
     # If we reach here it means we will need at least 1 new machine (for the added component)
     # Using the get final matrix method we find out either the new assignment matrix or an error message
