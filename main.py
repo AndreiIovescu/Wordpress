@@ -184,9 +184,13 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix, check_initial_matrix):
     problem_component_id = None
 
+    # To know which component we will have to add, we must identify the problem component
+    # We go from the last column of the assignment matrix and check each column
+    # If we find any of the components involved in the constraint, we found the component that caused the inequality
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
         deployed_components = get_deployed_components(new_matrix, column)
         if constraint['alphaCompId'] in deployed_components:
+            # We have to add instances of this component since the alphaCompId was deployed and messed the constraint
             problem_component_id = constraint['betaCompId']
             component_id = constraint['alphaCompId']
             break
@@ -195,10 +199,6 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
             component_id = constraint['betaCompId']
             break
 
-    """if constraint['alphaCompId'] == component_id:
-        problem_component_id = constraint['betaCompId']
-    else:
-        problem_component_id = constraint['alphaCompId']"""
     if check_initial_matrix == "Yes":
 
         # If we can place the new component on a machine the we already had
@@ -232,9 +232,13 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
                            constraints_list, offers_list, initial_matrix, check_initial_matrix):
     problem_component_id = None
 
+    # To know which component we will have to add, we must identify the problem component
+    # We go from the last column of the assignment matrix and check each column
+    # If we find any of the components involved in the constraint, we found the component that caused the inequality
     for column in reversed(range(len(initial_matrix[0]), len(new_matrix[0]))):
         deployed_components = get_deployed_components(new_matrix, column)
         if constraint['alphaCompId'] in deployed_components:
+            # We have to add instances of this component since the alphaCompId was deployed and messed the constraint
             problem_component_id = constraint['betaCompId']
             component_id = constraint['alphaCompId']
             break
@@ -242,10 +246,6 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
             problem_component_id = constraint['alphaCompId']
             component_id = constraint['betaCompId']
             break
-    """if constraint['betaCompId'] == component_id:
-        problem_component_id = constraint['alphaCompId']
-    else:
-        problem_component_id = constraint['betaCompId']"""
 
     if check_initial_matrix == "Yes":
 
