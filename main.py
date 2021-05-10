@@ -313,7 +313,7 @@ def get_component_conflicts(component_id, constraints_list):
                 if component not in component_conflicts:
                     component_conflicts.append(component)
         # Also, we could find the given id in the conflict list of another component
-        # If that is the case, and that component's id is not in the conflict list , we add it too
+        # If that is the case, and that component's id is not in the conflict list already , we add it too
         if component_id in conflict['compsIdList'] and conflict['alphaCompId'] not in component_conflicts:
             component_conflicts.append(conflict['alphaCompId'])
     return component_conflicts
@@ -425,7 +425,6 @@ def add_column(matrix, component_id):
 # A function that gets the name of each false constraint and calls the corresponding function to handle it
 def handle_false_constraints(false_constraints, new_matrix, types, component_id, components_list,
                              constraints_list, offers_list, initial_matrix, check_initial_matrix):
-    result = None
     for constraint in false_constraints:
         constraint_name = constraint['type']
         # All handling functions follow the convention: handle_constraint_name
@@ -434,8 +433,8 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
                                                   "constraints_list, offers_list, initial_matrix, check_initial_matrix)"
         )
         # We check after every handle function call if the false constraint can be fixed or not
-        # In general result should be a new matrix, after fixing a constraint
-        # If the type of new matrix is string, it means the constraint cannot be fixed and result is an error message
+        # In general the result should be a new matrix, after fixing a constraint
+        # If the type of new matrix is string, it means the constraint can't be fixed and the result is an error message
         if type(new_matrix) == str:
             return new_matrix
     return new_matrix
@@ -476,25 +475,31 @@ def get_new_resources(new_matrix, initial_matrix):
     return new_components_resources
 
 
-# Sorts the received list in ascending order after the cpu, then after the memory, etc
+# Sorts the received list in ascending order after the price
 def sort_offers(offers_list):
     sorted_list = sorted(offers_list, key=lambda i: (i['Price']))
     return sorted_list
 
 
+# This function receives the list of offers and a list with the resources needed by the new components to be added
+# It will return a list with the id of the chosen machines
 def choose_machine(offers_list, components_resources):
     new_machines = []
     sorted_offers = deepcopy(offers_list)
+    # To choose a corresponding machine, we sort the list of offers in ascending order after price
     sorted_offers = sort_offers(sorted_offers)
 
     for machine_resources in components_resources:
+        # We consider only the offers that satisfy the hardware requirements
         matching_offers = [
             offer for offer in sorted_offers
             if offer['Cpu'] >= machine_resources['Cpu']
-               and offer['Memory'] >= machine_resources['Memory']
-               and offer['Storage'] >= machine_resources['Storage']
+            and offer['Memory'] >= machine_resources['Memory']
+            and offer['Storage'] >= machine_resources['Storage']
         ]
 
+        # We take the first machine from the matching offers
+        # By doing this, we make sure that the hardware requirements are satisfied and we have the lowest price
         new_machines.append(offers_list.index(matching_offers[0]))
     return new_machines
 
