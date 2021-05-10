@@ -143,8 +143,8 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
         deployed_components = get_deployed_components(matrix, column)
         # We create a list with the elements that are deployed but are in conflict with the component
         components_in_conflict = [
-                    component for component in deployed_components
-                    if constraint['alphaCompId'] not in conflicts
+            component for component in deployed_components
+            if constraint['alphaCompId'] not in conflicts
         ]
         # If on any machine the component is not deployed, but there is no conflict to stop that, we return false
         # The list being empty means that the component could actually be deployed on that machine
@@ -350,7 +350,7 @@ def get_free_space(machine_id, matrix, column, offers_list, components_list):
         free_space = [offers_list[machine_id][resource] for resource in offers_list[machine_id] if resource != 'Price']
         return free_space
     else:
-        resources = [resource for resource in offers[machine_id] if resource != 'Price']
+        resources = [resource for resource in offers_list[machine_id] if resource != 'Price']
         # We return the remaining between the machine capacity and the already occupied space
         free_space = [offers_list[machine_id][resource] - components_list[deployed_component][resource]
                       for resource in resources for deployed_component in deployed_components]
@@ -446,7 +446,7 @@ def get_final_matrix(matrix, types, component_id, components_list, component_con
     false_constraints = check_constraints(constraints_list, matrix, component_id)
     while false_constraints:
         matrix = handle_false_constraints(
-            false_constraints, matrix, types, component_id,components_list,
+            false_constraints, matrix, types, component_id, components_list,
             constraints_list, offers_list, initial_matrix, check_initial_matrix
         )
         # After every attempt of fixing false constraints we want to see if the handling was able to run
@@ -460,13 +460,13 @@ def get_final_matrix(matrix, types, component_id, components_list, component_con
 
 # A function that returns a list containing the resource that each of the new components consume
 # For each machine we have a dictionary with the sum of resources on that machine, all of those held in a list
-def get_new_resources(new_matrix, initial_matrix):
+def get_new_resources(new_matrix, initial_matrix, components_list):
     new_components_resources = []
-    resources_keys = [key for key in components[0] if key != 'Name']
+    resources_keys = [key for key in components_list[0] if key != 'Name']
     # We check only the new machines
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components_id = get_deployed_components(new_matrix, column)
-        components_dict = [components[index] for index in deployed_components_id]
+        components_dict = [components_list[index] for index in deployed_components_id]
         machine_resources = {resource: 0 for resource in resources_keys}
         for component in components_dict:
             for key in resources_keys:
@@ -494,8 +494,8 @@ def choose_machine(offers_list, components_resources):
         matching_offers = [
             offer for offer in sorted_offers
             if offer['Cpu'] >= machine_resources['Cpu']
-            and offer['Memory'] >= machine_resources['Memory']
-            and offer['Storage'] >= machine_resources['Storage']
+               and offer['Memory'] >= machine_resources['Memory']
+               and offer['Storage'] >= machine_resources['Storage']
         ]
 
         # We take the first machine from the matching offers
@@ -520,8 +520,8 @@ def check_existing_machines(matrix, types_array, component_id, components_list, 
 
 
 # We can have 2 kinds of solution handling
-def get_solution(matrix, initial_matrix, types, prices, offers_list):
-    new_components_resources = get_new_resources(matrix, initial_matrix)
+def get_solution(matrix, initial_matrix, types, prices, offers_list, components_list):
+    new_components_resources = get_new_resources(matrix, initial_matrix, components_list)
 
     # If this is empty, it means we were able to deploy the component/s on the machines we already had
     # In that case, we just need to return the matrix and arrays with price and vm types; they are not modified
@@ -555,11 +555,20 @@ def write_solution_to_file(file, dictionary):
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
-def solve_problem(solution, components_list, component_id, constraints_list, offers_list):
+def solve_problem(problem_file, offers_file, minizinc_solution):
+    components_list = get_components(problem_file)
+
+    constraints_list = get_constraints(problem_file)
+
+    offers_list = get_offers(offers_file)
+
+    existing_solution = parse_existing_solution(minizinc_solution)
+
     # Load the necessary input from the existing solution
-    assignment_matrix = solution['Assignment Matrix']
-    vm_types = solution["Type Array"]
-    prices = solution["Price Array"]
+    assignment_matrix = existing_solution['Assignment Matrix']
+    vm_types = existing_solution["Type Array"]
+    prices = existing_solution["Price Array"]
+    component_id = existing_solution['Added Component']
     # Get the constraints that involve the added component
     component_constraints = get_component_constraints(component_id, constraints_list)
 
@@ -573,7 +582,8 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
     if new_component_column >= 0:
         new_matrix = deepcopy(assignment_matrix)
         new_matrix[component_id][new_component_column] = 1
-        output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types, prices, offers_list)
+        output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
+                                         prices, offers_list, components_list)
         write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
         return
     # If we reach here it means we will need at least 1 new machine (for the added component)
@@ -592,8 +602,8 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
         else:
             new_vm_types = deepcopy(vm_types)
             new_price_array = deepcopy(prices)
-            output_dictionary = get_solution(less_machines_matrix, assignment_matrix,
-                                             new_vm_types, new_price_array, offers_list)
+            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
+                                             new_price_array, offers_list, components_list)
             write_solution_to_file("Wordpress3_Offers20_MinVM.json", output_dictionary)
 
         one_comp_machines_matrix = deepcopy(assignment_matrix)
@@ -608,27 +618,20 @@ def solve_problem(solution, components_list, component_id, constraints_list, off
         else:
             new_vm_types = deepcopy(vm_types)
             new_price_array = deepcopy(prices)
-            output_dictionary = get_solution(less_machines_matrix, assignment_matrix,
-                                             new_vm_types, new_price_array, offers_list)
+            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
+                                             new_price_array, offers_list, components_list)
             write_solution_to_file("Wordpress3_Offers20_DistinctVM.json", output_dictionary)
-        return one_comp_machines_matrix, vm_types, prices
+        return output_dictionary
 
 
 if __name__ == '__main__':
-    components = get_components("Wordpress3.json")
+    result = solve_problem(
+        "Wordpress3.json",
+        "offers_20.json",
+        "Wordpress3_Offers20_Input.json"
+    )
 
-    constraints = get_constraints("Wordpress3.json")
-
-    offers = get_offers("offers_20.json")
-
-    existing_solution = parse_existing_solution("Wordpress3_Offers20_Input.json")
-
-    comp_id = existing_solution['Added Component']
-
-    new_assignment_matrix, new_vm_types, new_price_array = solve_problem(existing_solution, components,
-                                                                         comp_id, constraints, offers)
-
-    for row in new_assignment_matrix:
+    for row in result['Assignment Matrix']:
         print(row)
-    print(new_vm_types)
-    print(new_price_array)
+    print(result['Type Array'])
+    print(result['Price Array'])
