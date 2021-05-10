@@ -561,8 +561,46 @@ def write_solution_to_file(file, dictionary):
                          'Time': 0})
 
 
-def solve_min_vm():
-    pass
+def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
+                 components_list, component_constraints,constraints_list, offers_list):
+
+    less_machines_matrix = deepcopy(assignment_matrix)
+    less_machines_matrix = add_column(less_machines_matrix, component_id)
+    less_machines_matrix = get_final_matrix(
+        less_machines_matrix, vm_types, component_id, components_list, component_constraints,
+        constraints_list, offers_list, assignment_matrix, "Yes"
+    )
+
+    if type(less_machines_matrix) == str:
+        return less_machines_matrix
+    else:
+        new_vm_types = deepcopy(vm_types)
+        new_price_array = deepcopy(prices)
+        output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
+                                         new_price_array, offers_list, components_list)
+        write_solution_to_file("Wordpress3_Offers20_MinVM.csv", output_dictionary)
+        return output_dictionary
+
+
+def solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
+                      components_list, component_constraints,constraints_list, offers_list):
+
+    one_comp_machines_matrix = deepcopy(assignment_matrix)
+    one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
+    one_comp_machines_matrix = get_final_matrix(
+        one_comp_machines_matrix, vm_types, component_id, components_list, component_constraints,
+        constraints_list, offers_list, assignment_matrix, "No"
+    )
+
+    if type(one_comp_machines_matrix) == str:
+        return one_comp_machines_matrix
+    else:
+        new_vm_types = deepcopy(vm_types)
+        new_price_array = deepcopy(prices)
+        output_dictionary = get_solution(one_comp_machines_matrix, assignment_matrix, new_vm_types,
+                                         new_price_array, offers_list, components_list)
+        write_solution_to_file("Wordpress3_Offers20_DistinctVM.csv", output_dictionary)
+        return output_dictionary
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
@@ -601,50 +639,25 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Using the get final matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
-        solve_min_vm(assignment_matrix, component_id, vm_types, prices,
-                     components_list, component_constraints,constraints_list, offers_list )
-        less_machines_matrix = deepcopy(assignment_matrix)
-        less_machines_matrix = add_column(less_machines_matrix, component_id)
-        less_machines_matrix = get_final_matrix(
-            less_machines_matrix, vm_types, component_id, components_list, component_constraints,
-            constraints_list, offers_list, assignment_matrix, "Yes"
-        )
+        result = solve_min_vm(assignment_matrix, component_id, vm_types, prices,
+                              components_list, component_constraints,constraints_list, offers_list)
 
-        if type(less_machines_matrix) == str:
-            print(less_machines_matrix)
-        else:
-            new_vm_types = deepcopy(vm_types)
-            new_price_array = deepcopy(prices)
-            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
-                                             new_price_array, offers_list, components_list)
-            write_solution_to_file("Wordpress3_Offers20_MinVM.csv", output_dictionary)
+        if len(result) == 1:
+            print(result)
 
-        one_comp_machines_matrix = deepcopy(assignment_matrix)
-        one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
-        one_comp_machines_matrix = get_final_matrix(
-            one_comp_machines_matrix, vm_types, component_id, components_list, component_constraints,
-            constraints_list, offers_list, assignment_matrix, "No"
-        )
+        result = solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
+                                   components_list, component_constraints, constraints_list, offers_list)
 
-        if type(one_comp_machines_matrix) == str:
-            print(one_comp_machines_matrix)
-        else:
-            new_vm_types = deepcopy(vm_types)
-            new_price_array = deepcopy(prices)
-            output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
-                                             new_price_array, offers_list, components_list)
-            write_solution_to_file("Wordpress3_Offers20_DistinctVM.csv", output_dictionary)
-        return output_dictionary
+        if len(result) == 1:
+            print(result)
+
+        return
 
 
 if __name__ == '__main__':
-    result = solve_problem(
+    solve_problem(
         "Wordpress3.json",
         "offers_20.json",
         "Wordpress3_Offers20_Input.json"
     )
 
-    for row in result['Assignment Matrix']:
-        print(row)
-    print(result['Type Array'])
-    print(result['Price Array'])
