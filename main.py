@@ -1,5 +1,6 @@
 import csv
 import json
+import time
 from copy import deepcopy
 
 
@@ -182,7 +183,7 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
 
 # A function that tries to fix a provide constraint that is false
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
-                   constraints_list, offers_list, initial_matrix, check_initial_matrix):
+                   constraints_list, offers_list, initial_matrix, check_new_columns):
     problem_component_id = None
 
     # To know which component we will have to add, we must identify the problem component
@@ -200,8 +201,6 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
             component_id = constraint['betaCompId']
             break
 
-    if check_initial_matrix == "Yes":
-
         # If we can place the new component on a machine the we already had
         # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
         new_component_column = check_existing_machines(initial_matrix, types, component_id,
@@ -212,6 +211,7 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
             new_matrix[problem_component_id][new_component_column] = 1
             return new_matrix
 
+    if check_new_columns == "Yes":
         # With new columns we want to see if we work with the original matrix, or with a matrix with new
         # machines/columns
         new_columns = len(new_matrix[0]) - len(initial_matrix[0])
@@ -230,7 +230,7 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
 
 # A function that tries to fix a require_provide constraint that is false
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
-                           constraints_list, offers_list, initial_matrix, check_initial_matrix):
+                           constraints_list, offers_list, initial_matrix, check_new_columns):
     problem_component_id = None
 
     # To know which component we will have to add, we must identify the problem component
@@ -248,18 +248,17 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
             component_id = constraint['betaCompId']
             break
 
-    if check_initial_matrix == "Yes":
+    # If we can place the new component on a machine the we already had
+    # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
+    new_component_column = check_existing_machines(initial_matrix, types, component_id,
+                                                   components_list, constraints_list, offers_list)
+    # In case we can place the component on previous machines, we just update the assignment matrix accordingly
+    # We don't have to check anything else, because we don't rent a new machine
+    if new_component_column >= 0:
+        new_matrix[problem_component_id][new_component_column] = 1
+        return new_matrix
 
-        # If we can place the new component on a machine the we already had
-        # This variable will take the value of that machine's id (it will be -1 if we can't place it on any machine)
-        new_component_column = check_existing_machines(initial_matrix, types, component_id,
-                                                       components_list, constraints_list, offers_list)
-        # In case we can place the component on previous machines, we just update the assignment matrix accordingly
-        # We don't have to check anything else, because we don't rent a new machine
-        if new_component_column >= 0:
-            new_matrix[problem_component_id][new_component_column] = 1
-            return new_matrix
-
+    if check_new_columns == "Yes":
         # With new columns we want to see if we work with the original matrix,or with a matrix with new machines/columns
         new_columns = len(new_matrix[0]) - len(initial_matrix[0])
         # In case there are new machines, we don't actually know yet what kind of machine they are
@@ -550,7 +549,7 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list, components_
 
 # This function receives a file and a dictionary that contains the problem solution
 # It will write the solution in the file, using json convention
-def write_solution_to_file(file, dictionary):
+def write_solution(file, dictionary):
     with open(file, mode='w', newline='') as f:
         fieldnames = ['Price min value', 'Price for each machine', 'Time']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -567,10 +566,10 @@ def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
     new_matrix[component_id][new_component_column] = 1
     output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
                                      prices, offers_list, components_list)
-    write_solution_to_file("Wordpress3_Offers20_Output.json", output_dictionary)
-    return
+    write_solution("Wordpress3_Offers20_Output.json", output_dictionary)
+    return output_dictionary
 
-    
+
 def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
                  components_list, component_constraints,constraints_list, offers_list):
 
@@ -588,7 +587,6 @@ def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
         new_price_array = deepcopy(prices)
         output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
                                          new_price_array, offers_list, components_list)
-        write_solution_to_file("Wordpress3_Offers20_MinVM.csv", output_dictionary)
         return output_dictionary
 
 
@@ -609,7 +607,6 @@ def solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
         new_price_array = deepcopy(prices)
         output_dictionary = get_solution(one_comp_machines_matrix, assignment_matrix, new_vm_types,
                                          new_price_array, offers_list, components_list)
-        write_solution_to_file("Wordpress3_Offers20_DistinctVM.csv", output_dictionary)
         return output_dictionary
 
 
@@ -651,12 +648,16 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
 
         if len(result) == 1:
             print(result)
+        else:
+            write_solution(f"{problem_file.replace('.json', '')}_Offers{len(offers_list)}_MinVM.csv", result)
 
         result = solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
                                    components_list, component_constraints, constraints_list, offers_list)
 
         if len(result) == 1:
             print(result)
+        else:
+            write_solution(f"{problem_file.replace('.json', '')}_Offers{len(offers_list)}_DistinctVM.csv", result)
 
         return
 
