@@ -570,6 +570,8 @@ def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
     return output_dictionary
 
 
+# This function is for the approach in which we are interested to fit the new components on as few machines as possible
+# Therefore, when looking to add a new component, we also check the new machines, to see if we can deploy there
 def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
                  components_list, component_constraints,constraints_list, offers_list):
 
@@ -590,6 +592,9 @@ def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
         return output_dictionary
 
 
+# This function is for the approach in which we are interested to fit the new components on one machine each
+# Therefore, when looking to add a new component, we check the original machines, to see if we can deploy there
+# But, we don't check the new machines(that were not in the starting solution), we just take a new one if it is needed
 def solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
                       components_list, component_constraints,constraints_list, offers_list):
 
