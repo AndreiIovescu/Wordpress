@@ -560,6 +560,9 @@ def write_solution(file, dictionary, runtime):
                          'Time': runtime})
 
 
+# This method handles the case where we can solve the problem just by adding one more component to the initial matrix
+# We just have to update the assignment matrix accordingly as the price and type array will remain the same
+# This is done by calling the get_solution method
 def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
                             components_list, new_component_column, offers_list):
     new_matrix = deepcopy(assignment_matrix)
@@ -569,6 +572,9 @@ def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
     return output_dictionary
 
 
+# This method is used to apply the suitable greedy algorithm of the two options (min vm or distinct vm)
+# Since the process is almost identical, we have this method that can apply both of them
+# We know which one to apply because of the greedy type parameter (can be "min_vm" or "distinct_vm")
 def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
            component_constraints, constraints_list, offers_list, greedy_type):
     new_matrix = deepcopy(assignment_matrix)
@@ -595,9 +601,13 @@ def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
         return output_dictionary
 
 
+# This function is used to verify if the problem was solved or not
 def validate_result(result, minizinc_solution, greedy_type, runtime):
+    # If the length of the output is 1, it means the output is just the error message saying what went wrong
     if len(result) == 1:
         print(result)
+    # If the output is ok, we can write the solution to the corresponding file
+    # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
         write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result, runtime)
 
