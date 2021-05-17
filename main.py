@@ -570,47 +570,28 @@ def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
     return output_dictionary
 
 
-# This function is for the approach in which we are interested to fit the new components on as few machines as possible
-# Therefore, when looking to add a new component, we also check the new machines, to see if we can deploy there
-def solve_min_vm(assignment_matrix, component_id, vm_types, prices,
-                 components_list, component_constraints,constraints_list, offers_list):
+def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
+           component_constraints, constraints_list, offers_list, greedy_type):
+    new_matrix = deepcopy(assignment_matrix)
+    new_matrix = add_column(new_matrix, component_id)
 
-    less_machines_matrix = deepcopy(assignment_matrix)
-    less_machines_matrix = add_column(less_machines_matrix, component_id)
-    less_machines_matrix = get_final_matrix(
-        less_machines_matrix, vm_types, component_id, components_list, component_constraints,
-        constraints_list, offers_list, assignment_matrix, "Yes"
-    )
+    if greedy_type == "min_vm":
+        new_matrix = get_final_matrix(
+            new_matrix, vm_types, component_id, components_list, component_constraints,
+            constraints_list, offers_list, assignment_matrix, "Yes"
+        )
+    elif greedy_type == "distinct_vm":
+        new_matrix = get_final_matrix(
+            new_matrix, vm_types, component_id, components_list, component_constraints,
+            constraints_list, offers_list, assignment_matrix, "No"
+        )
 
-    if type(less_machines_matrix) == str:
-        return less_machines_matrix
+    if type(new_matrix) == str:
+        return new_matrix
     else:
         new_vm_types = deepcopy(vm_types)
         new_price_array = deepcopy(prices)
-        output_dictionary = get_solution(less_machines_matrix, assignment_matrix, new_vm_types,
-                                         new_price_array, offers_list, components_list)
-        return output_dictionary
-
-
-# This function is for the approach in which we are interested to fit the new components on one machine each
-# Therefore, when looking to add a new component, we check the original machines, to see if we can deploy there
-# But, we don't check the new machines(that were not in the starting solution), we just take a new one if it is needed
-def solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
-                      components_list, component_constraints,constraints_list, offers_list):
-
-    one_comp_machines_matrix = deepcopy(assignment_matrix)
-    one_comp_machines_matrix = add_column(one_comp_machines_matrix, component_id)
-    one_comp_machines_matrix = get_final_matrix(
-        one_comp_machines_matrix, vm_types, component_id, components_list, component_constraints,
-        constraints_list, offers_list, assignment_matrix, "No"
-    )
-
-    if type(one_comp_machines_matrix) == str:
-        return one_comp_machines_matrix
-    else:
-        new_vm_types = deepcopy(vm_types)
-        new_price_array = deepcopy(prices)
-        output_dictionary = get_solution(one_comp_machines_matrix, assignment_matrix, new_vm_types,
+        output_dictionary = get_solution(new_matrix, assignment_matrix, new_vm_types,
                                          new_price_array, offers_list, components_list)
         return output_dictionary
 
@@ -633,6 +614,8 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Get the constraints that involve the added component
     component_constraints = get_component_constraints(component_id, constraints_list)
 
+    start_time = time.time()
+
     # If we can place the component on a machine that we already have, this will get the value of that machine's id
     # In case there is no such machine, it will have value -1
     new_component_column = check_existing_machines(assignment_matrix, vm_types, component_id,
@@ -643,34 +626,40 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     if new_component_column >= 0:
         solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
                                 components_list, new_component_column, offers_list)
+        run_time = time.time() - start_time
         return
     # If we reach here it means we will need at least 1 new machine (for the added component)
     # Using the get final matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
-        result = solve_min_vm(assignment_matrix, component_id, vm_types, prices,
-                              components_list, component_constraints,constraints_list, offers_list)
+        result = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
+                        component_constraints, constraints_list, offers_list, "min_vm")
+
+        run_time = time.time() - start_time
 
         if len(result) == 1:
             print(result)
         else:
-            write_solution(f"{problem_file.replace('.json', '')}_Offers{len(offers_list)}_MinVM.csv", result)
+            write_solution(f"{minizinc_solution.replace('_Input.json', '')}_MinVM.csv", result)
 
-        result = solve_distinct_vm(assignment_matrix, component_id, vm_types, prices,
-                                   components_list, component_constraints, constraints_list, offers_list)
+        start_time = time.time()
+
+        result = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
+                        component_constraints, constraints_list, offers_list, "distinct_vm")
+
+        run_time = run_time + time.time() - start_time
 
         if len(result) == 1:
             print(result)
         else:
-            write_solution(f"{problem_file.replace('.json', '')}_Offers{len(offers_list)}_DistinctVM.csv", result)
+            write_solution(f"{minizinc_solution.replace('_Input.json', '')}_DistinctVM.csv", result)
 
         return
 
 
 if __name__ == '__main__':
     solve_problem(
-        "Wordpress3.json",
+        "Wordpress.json",
         "offers_20.json",
         "Wordpress3_Offers20_Input.json"
     )
-
