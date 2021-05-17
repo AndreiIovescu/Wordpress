@@ -549,7 +549,7 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list, components_
 
 # This function receives a file and a dictionary that contains the problem solution
 # It will write the solution in the file, using json convention
-def write_solution(file, dictionary):
+def write_solution(file, dictionary, runtime):
     with open(file, mode='w', newline='') as f:
         fieldnames = ['Price min value', 'Price for each machine', 'Time']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -557,7 +557,7 @@ def write_solution(file, dictionary):
         writer.writeheader()
         min_price = sum(dictionary['Price Array'])
         writer.writerow({'Price min value': min_price, 'Price for each machine': dictionary['Price Array'],
-                         'Time': 0})
+                         'Time': runtime})
 
 
 def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
@@ -566,7 +566,6 @@ def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
     new_matrix[component_id][new_component_column] = 1
     output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
                                      prices, offers_list, components_list)
-    write_solution("Wordpress3_Offers20_Output.json", output_dictionary)
     return output_dictionary
 
 
@@ -596,11 +595,11 @@ def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
         return output_dictionary
 
 
-def validate_result(result, minizinc_solution, greedy_type):
+def validate_result(result, minizinc_solution, greedy_type, runtime):
     if len(result) == 1:
         print(result)
     else:
-        write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result)
+        write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result, runtime)
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
@@ -631,9 +630,11 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Since we can place the component on existing machines, we just have to update the information we want to output
     # We are interested in the new assignment matrix, price array and vm types array
     if new_component_column >= 0:
-        solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
-                                components_list, new_component_column, offers_list)
+        result = solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
+                                         components_list, new_component_column, offers_list)
+
         run_time = time.time() - start_time
+        write_solution(f"{minizinc_solution.replace('_Input.json', '')}_Output.csv", result, run_time)
         return
     # If we reach here it means we will need at least 1 new machine (for the added component)
     # Using the get final matrix method we find out either the new assignment matrix or an error message
@@ -642,11 +643,16 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
         result_min_vm = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
                                component_constraints, constraints_list, offers_list, "min_vm")
 
+        run_time_min_vm = time.time() - start_time
+        start_time = time.time()
+
         result_distinct_vm = greedy(assignment_matrix, component_id, vm_types, prices, components_list,
                                     component_constraints, constraints_list, offers_list, "distinct_vm")
 
-        validate_result(result_min_vm, minizinc_solution, "MinVM")
-        validate_result(result_distinct_vm, minizinc_solution, "DistinctVM")
+        run_time_distinct_vm = time.time() - start_time
+
+        validate_result(result_min_vm, minizinc_solution, "MinVM", run_time_min_vm)
+        validate_result(result_distinct_vm, minizinc_solution, "DistinctVM", run_time_distinct_vm)
 
         return
 
