@@ -596,6 +596,13 @@ def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
         return output_dictionary
 
 
+def validate_result(result, minizinc_solution, greedy_type):
+    if len(result) == 1:
+        print(result)
+    else:
+        write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result)
+
+
 # The actual 'solving' method, where we apply the previous functions to solve the problem
 def solve_problem(problem_file, offers_file, minizinc_solution):
     components_list = get_components(problem_file)
@@ -632,27 +639,14 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     # Using the get final matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
-        result = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
-                        component_constraints, constraints_list, offers_list, "min_vm")
+        result_min_vm = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
+                               component_constraints, constraints_list, offers_list, "min_vm")
 
-        run_time = time.time() - start_time
+        result_distinct_vm = greedy(assignment_matrix, component_id, vm_types, prices, components_list,
+                                    component_constraints, constraints_list, offers_list, "distinct_vm")
 
-        if len(result) == 1:
-            print(result)
-        else:
-            write_solution(f"{minizinc_solution.replace('_Input.json', '')}_MinVM.csv", result)
-
-        start_time = time.time()
-
-        result = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
-                        component_constraints, constraints_list, offers_list, "distinct_vm")
-
-        run_time = run_time + time.time() - start_time
-
-        if len(result) == 1:
-            print(result)
-        else:
-            write_solution(f"{minizinc_solution.replace('_Input.json', '')}_DistinctVM.csv", result)
+        validate_result(result_min_vm, minizinc_solution, "MinVM")
+        validate_result(result_distinct_vm, minizinc_solution, "DistinctVM")
 
         return
 
