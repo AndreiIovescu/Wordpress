@@ -165,17 +165,6 @@ constraint conflict(4, {1,2,5});
 solve minimize sum(p in price) (p);
 
 
-% output in a csv like style
-output ["Min Price"] ++ [", Type Array"] ++ [", Cpu Array"] ++ [", Memory Array"] ++ [", Storage Array"] ++ [", Price Array \n"] ++ 
-       [show(sum(p in price)(p))] ++ [","] ++
-       [show_int(5,t[k])|k in 1..M] ++ [","]++
-       [show_int(5,cpu[k]) | k in 1..M] ++ [","]++
-       [show_int(10,mem[k]) | k in 1..M] ++ [","]++
-       [show_int(10,storage[k]) | k in 1..M] ++[","]++
-       [show_int(10,price[k]) | k in 1..M] ++ [", \n"]++
-       [" Assignment Matrix \n"] ++
-       [show_int(5,a[i,k]) ++ if k == M then "\n" else "" endif | i in 1..N, k in 1..M ];
-        %pret total (min)*/
-        
+
       
   
