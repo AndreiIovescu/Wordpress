@@ -1,6 +1,5 @@
 import csv
 import json
-import os
 import time
 from copy import deepcopy
 
@@ -610,11 +609,13 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
     # If the output is ok, we can write the solution to the corresponding file
     # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
-        write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result, runtime)
+        minizinc_solution = minizinc_solution.replace('Greedy_Input\\', '')
+        minizinc_solution = minizinc_solution.replace('_Input.json', '')
+        write_solution(f"Greedy_Output\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
-def solve_problem(problem_file, offers_file, minizinc_solution):
+def solve_problem(problem_file, offers_file, minizinc_solution, added_component):
     components_list = get_components(problem_file)
 
     constraints_list = get_constraints(problem_file)
@@ -627,7 +628,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
     assignment_matrix = existing_solution['Assignment Matrix']
     vm_types = existing_solution["Type Array"]
     prices = existing_solution["Price Array"]
-    component_id = existing_solution['Added Component']
+    component_id = added_component
     # Get the constraints that involve the added component
     component_constraints = get_component_constraints(component_id, constraints_list)
 
@@ -672,9 +673,11 @@ if __name__ == '__main__':
     problem_name = "Wordpress"
     offers_number = 20
     wordpress_instances = 3
+    component_to_add = 0
 
     solve_problem(
         f"{problem_name}.json",
         f"Offers\\offers_{offers_number}.json",
-        f"Greedy_Input\\{wordpress_instances}_Offers{offers_number}_Input.json"
+        f"Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
+        component_to_add
     )

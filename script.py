@@ -73,14 +73,13 @@ def create_directory(directory_name):
 
 
 if __name__ == '__main__':
-    output, runtime = solve_model_minizinc("Wordpress.mzn", 3, "chuffed", 20)
-    write_output("Wordpress.mzn", 3, 20, output['price'], runtime)
-    create_greedy_input("Wordpress.mzn", 3, 20, output['a'], output['price'],  output['t'])
-    """model_file = "Wordpress.mzn"
+    model_file = "Models\\Wordpress.mzn"
     Solvers = ["chuffed", "gecode", "or-tools"]
     offers_numbers = [20, 40, 250, 500]
     for solver in Solvers:
         for component_instances in range(3, 13):
             for number in offers_numbers:
-                output = solve_model_minizinc(model_file, component_instances, solver, number)
-                print(output)"""
+                output, runtime = solve_model_minizinc(model_file, component_instances, solver, number)
+                write_output(model_file, component_instances, number, output['price'], runtime)
+                create_greedy_input(model_file, component_instances, number,
+                                    output['a'], output['price'], output['t'])
