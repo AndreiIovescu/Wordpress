@@ -676,6 +676,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
 
 if __name__ == '__main__':
     create_directory("Offers")
+    create_directory("Greedy_Input")
 
     problem_name = "Wordpress"
     offers_number = 20
@@ -684,5 +685,5 @@ if __name__ == '__main__':
     solve_problem(
         f"{problem_name}.json",
         f"Offers\\offers_{offers_number}.json",
-        f"{wordpress_instances}_Offers{offers_number}_Input.json"
+        f"Greedy_Input\\{wordpress_instances}_Offers{offers_number}_Input.json"
     )
