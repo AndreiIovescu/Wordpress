@@ -29,7 +29,8 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
     # Create an instance of the problem using the previous solver
     instance = Instance(solver, model)
     # Links the corresponding dzn file to the model
-    instance.add_file(f"DZN_Files\\{model_path.replace('.mzn', '')}_Offers{offers_number}.dzn")
+    model_path = model_path.replace('Models\\', '')
+    instance.add_file(f"Input\\DZN_Files\\{model_path.replace('.mzn', '')}_Offers{offers_number}.dzn")
     # Assign the number of wordpress instances and the minimum machines number
     instance["M"] = get_min_machine_number(
         f"Surrogate\\{model_path.replace('.mzn', '')}_Surrogate.csv",
@@ -42,9 +43,11 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
     return result, run_time
 
 
-def write_output(model_file, component_number, offer_number, price_array, run_time):
-    create_directory("MiniZinc_Output")
-    file = f"MiniZinc_Output\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_MiniZinc.csv"
+def write_output(model_file, component_number, offer_number, price_array, run_time, solver):
+    create_directory("Output\\MiniZinc_Output")
+    model_file = model_file.replace('Models\\', '')
+    file = f"Output\\MiniZinc_Output\\{model_file.replace('.mzn', '')}" \
+           f"{component_number}_Offers{offer_number}_{solver}.csv"
     with open(file, mode='w', newline='') as f:
         fieldnames = ['Price min value', 'Price for each machine', 'Time']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -55,8 +58,9 @@ def write_output(model_file, component_number, offer_number, price_array, run_ti
 
 
 def create_greedy_input(model_file, component_number, offer_number, assignment_matrix, price_array, type_array):
-    create_directory("Greedy_Input")
-    file = f"Greedy_Input\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_Input.json"
+    create_directory("Input\\Greedy_Input")
+    model_file = model_file.replace('Models\\', '')
+    file = f"Input\\Greedy_Input\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_Input.json"
     data = {
         "Assignment Matrix": assignment_matrix,
         "Price Array": price_array,
@@ -80,6 +84,6 @@ if __name__ == '__main__':
         for component_instances in range(3, 13):
             for number in offers_numbers:
                 output, runtime = solve_model_minizinc(model_file, component_instances, solver, number)
-                write_output(model_file, component_instances, number, output['price'], runtime)
+                write_output(model_file, component_instances, number, output['price'], runtime, solver)
                 create_greedy_input(model_file, component_instances, number,
                                     output['a'], output['price'], output['t'])

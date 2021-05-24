@@ -609,9 +609,9 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
     # If the output is ok, we can write the solution to the corresponding file
     # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
-        minizinc_solution = minizinc_solution.replace('Greedy_Input\\', '')
+        minizinc_solution = minizinc_solution.replace('Input\\Greedy_Input\\', '')
         minizinc_solution = minizinc_solution.replace('_Input.json', '')
-        write_solution(f"Greedy_Output\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
+        write_solution(f"Output\\Greedy_Output\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
@@ -679,8 +679,8 @@ if __name__ == '__main__':
     component_to_add = 0
 
     solve_problem(
-        f"{problem_name}.json",
-        f"Offers\\offers_{offers_number}.json",
-        f"Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
+        f"Input\\Problem_Description\\{problem_name}.json",
+        f"Input\\Offers\\offers_{offers_number}.json",
+        f"Input\\Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
         component_to_add
     )
