@@ -44,9 +44,9 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
 
 
 def write_output(model_file, component_number, offer_number, price_array, run_time, solver):
-    create_directory("Output\\MiniZinc_Output")
+    create_directory(f"Output\\MiniZinc_Output\\{solver}")
     model_file = model_file.replace('Models\\', '')
-    file = f"Output\\MiniZinc_Output\\{model_file.replace('.mzn', '')}" \
+    file = f"Output\\MiniZinc_Output\\{solver}\\{model_file.replace('.mzn', '')}" \
            f"{component_number}_Offers{offer_number}_{solver}.csv"
     with open(file, mode='w', newline='') as f:
         fieldnames = ['Price min value', 'Price for each machine', 'Time']
@@ -81,9 +81,21 @@ if __name__ == '__main__':
     Solvers = ["chuffed", "gecode", "or-tools"]
     offers_numbers = [20, 40, 250, 500]
     for solver in Solvers:
+        stop = False
         for component_instances in range(3, 13):
+            if stop:
+                break
             for number in offers_numbers:
                 output, runtime = solve_model_minizinc(model_file, component_instances, solver, number)
+                # If a run with 20 offers goes past the time limit there is no purpose to further test
+                if runtime >= 2400 and number == 20:
+                    stop = True
+                    break
+                # If the runtime is beaten at any other value than 20, it could mean we will miss some solutions
+                # For ex: wordpress 3 offers 40 -> time limit ( it means for sure 250 and 500 will also beat the limit)
+                # But, at the same time we would still have to check wordpress 4 offers 20 and so on..
+                elif runtime >= 2400:
+                    break
                 write_output(model_file, component_instances, number, output['price'], runtime, solver)
                 create_greedy_input(model_file, component_instances, number,
                                     output['a'], output['price'], output['t'])
