@@ -652,6 +652,9 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
     # Using the get final matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
+        # This is the time before applying each algorithm so it is needed for both of them
+        # We save it now so we can add it later to the second algorithm
+        intermediary_time = time.time() - start_time
         result_min_vm = greedy(assignment_matrix, component_id, vm_types, prices,components_list,
                                component_constraints, constraints_list, offers_list, "min_vm")
 
@@ -661,7 +664,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
         result_distinct_vm = greedy(assignment_matrix, component_id, vm_types, prices, components_list,
                                     component_constraints, constraints_list, offers_list, "distinct_vm")
 
-        run_time_distinct_vm = time.time() - start_time
+        run_time_distinct_vm = time.time() - start_time + intermediary_time
 
         validate_result(result_min_vm, minizinc_solution, "MinVM", run_time_min_vm)
         validate_result(result_distinct_vm, minizinc_solution, "DistinctVM", run_time_distinct_vm)
