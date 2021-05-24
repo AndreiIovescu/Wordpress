@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 import time
 from copy import deepcopy
 
@@ -612,6 +613,12 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
         write_solution(f"{minizinc_solution.replace('_Input.json', '')}_{greedy_type}.csv", result, runtime)
 
 
+# A function that checks if the directory with provided name already exists and it creates it if it doesn't
+def create_directory(directory_name):
+    if not os.path.exists(directory_name):
+        os.makedirs(directory_name)
+
+
 # The actual 'solving' method, where we apply the previous functions to solve the problem
 def solve_problem(problem_file, offers_file, minizinc_solution):
     components_list = get_components(problem_file)
@@ -668,11 +675,14 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
 
 
 if __name__ == '__main__':
+    create_directory("Offers")
+
     problem_name = "Wordpress"
     offers_number = 20
     wordpress_instances = 3
+
     solve_problem(
         f"{problem_name}.json",
-        f"offers_{offers_number}.json",
+        f"Offers\\offers_{offers_number}.json",
         f"{wordpress_instances}_Offers{offers_number}_Input.json"
     )

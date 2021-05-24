@@ -23,7 +23,10 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
     # Create an instance of the problem using the previous solver
     instance = Instance(solver, model)
     # Links the corresponding dzn file to the model
-    instance.add_file(f"{model_path.replace('.mzn', '')}_Offers{offers_number}.dzn")
+    directory = 'DZN_Files'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    instance.add_file(f"{directory}\\{model_path.replace('.mzn', '')}_Offers{offers_number}.dzn")
     # Assign the number of wordpress instances and the minimum machines number
     instance["M"] = get_min_machine_number(f"{model_path.replace('.mzn', '')}_Surrogate.csv", problem_instances_number)
     instance["WP"] = problem_instances_number
@@ -35,7 +38,7 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
 
 def write_output(model_file, component_number, offer_number, price_array, run_time):
     directory = 'MiniZinc_Output'
-    file = f"MiniZinc_Output\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_MiniZinc.csv"
+    file = f"{directory}\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_MiniZinc.csv"
     if not os.path.exists(directory):
         os.makedirs(directory)
     with open(file, mode='w', newline='') as f:
@@ -51,7 +54,7 @@ def create_greedy_input(model_file, component_number, offer_number, assignment_m
     directory = 'Greedy_Input'
     if not os.path.exists(directory):
         os.makedirs(directory)
-    file = f"Greedy_Input\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_Input.json"
+    file = f"{directory}\\{model_file.replace('.mzn', '')}{component_number}_Offers{offer_number}_Input.json"
     data = {
         "Assignment Matrix": assignment_matrix,
         "Price Array": price_array,
