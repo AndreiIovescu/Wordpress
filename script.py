@@ -64,6 +64,12 @@ def create_greedy_input(model_file, component_number, offer_number, assignment_m
         json.dump(data, f)
 
 
+# A function that checks if the directory with provided name already exists and it creates it if it doesn't
+def create_directory(directory_name):
+    if not os.path.exists(directory_name):
+        os.makedirs(directory_name)
+
+
 if __name__ == '__main__':
     output, runtime = solve_model_minizinc("Wordpress.mzn", 3, "chuffed", 20)
     write_output("Wordpress.mzn", 3, 20, output['price'], runtime)

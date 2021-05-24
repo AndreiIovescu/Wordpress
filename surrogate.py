@@ -34,8 +34,10 @@ def get_surrogate_results(model, solver, lower_bound, upper_bound):
 
 
 if __name__ == '__main__':
-    Surrogate = "Wordpress_Surrogate.mzn"
+    problem_name = "Wordpress"
+
+    Surrogate = f"Surrogate\\{problem_name}_Surrogate.mzn"
 
     surrogate_results = get_surrogate_results(Surrogate, "chuffed", 3, 12)
 
-    write_csv("Wordpress_Surrogate.csv", surrogate_results, "wordpress")
+    write_csv(f"Surrogate\\{problem_name}_Surrogate.csv", surrogate_results, f"{problem_name.lower()}")
