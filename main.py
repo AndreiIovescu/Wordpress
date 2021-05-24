@@ -668,8 +668,11 @@ def solve_problem(problem_file, offers_file, minizinc_solution):
 
 
 if __name__ == '__main__':
+    problem_name = "Wordpress"
+    offers_number = 20
+    wordpress_instances = 3
     solve_problem(
-        "Wordpress.json",
-        "offers_20.json",
-        "Wordpress3_Offers20_Input.json"
+        f"{problem_name}.json",
+        f"offers_{offers_number}.json",
+        f"{wordpress_instances}_Offers{offers_number}_Input.json"
     )
