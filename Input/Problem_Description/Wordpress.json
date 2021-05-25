@@ -46,8 +46,9 @@
   }
 ],
 "IP" : {"publicIPs": 1, "IPType": "IP4"},
-"comment-restrictions": "Require_Provide to be read as: for 1 instance of component with id 2 there must be at least ",
-"restrictions" : [{"type":"Lower_Bound",  "compsIdList":[0], "bound": 3},
+"comment-restrictions1": "Require_Provide to be read as: for 1 instance of component with id 2 there must be at least ",
+"comment-restrictions2": "We deleted the restriction related to lower bound of wordpress",             
+"restrictions" : [
                   {"type":"Lower_Bound",  "compsIdList":[1], "bound": 2},
                   {"type":"Lower_Bound",  "compsIdList":[4], "bound": 2},
                   {"type":"Provide", "alphaCompId":0, "betaCompId":2,"alphaCompIdInstances":7},
