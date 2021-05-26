@@ -611,7 +611,7 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
     else:
         minizinc_solution = minizinc_solution.replace('Input\\Greedy_Input\\', '')
         minizinc_solution = minizinc_solution.replace('_Input.json', '')
-        write_solution(f"Output\\Greedy_Output\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
+        write_solution(f"Output\\Greedy_Output\\{greedy_type}\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
