@@ -4,6 +4,7 @@ import csv
 import time
 import os
 import json
+#TODO files as params
 
 
 # This function returns the mapping between the number of components deployed and the max machine number
@@ -42,7 +43,7 @@ def solve_model_minizinc(model_path, problem_instances_number, solver, offers_nu
     run_time = time.time() - start_time
     return result, run_time
 
-
+#TODO: docstrings
 def write_output(model_file, component_number, offer_number, price_array, run_time, solver):
     create_directory(f"Output\\MiniZinc_Output\\{solver}")
     model_file = model_file.replace('Models\\', '')
@@ -56,7 +57,7 @@ def write_output(model_file, component_number, offer_number, price_array, run_ti
         min_price = sum(price_array)
         writer.writerow({'Price min value': min_price, 'Price for each machine': price_array, 'Time': run_time})
 
-
+#TODO files as params
 def create_greedy_input(model_file, component_number, offer_number, assignment_matrix, price_array, type_array):
     create_directory("Input\\Greedy_Input")
     model_file = model_file.replace('Models\\', '')
@@ -77,17 +78,20 @@ def create_directory(directory_name):
 
 
 if __name__ == '__main__':
+    # TODO model_file should be as a parameter
     model_file = "Models\\Wordpress.mzn"
     Solvers = ["chuffed", "gecode", "or-tools"]
     offers_numbers = [20, 40, 250, 500]
     for solver in Solvers:
         stop = False
+        # TODO Wordpress lower, upper
         for component_instances in range(3, 13):
             if stop:
                 break
             for number in offers_numbers:
                 output, runtime = solve_model_minizinc(model_file, component_instances, solver, number)
-                # If a run with 20 offers goes past the time limit there is no purpose to further test
+                # If a run with 20 offers goes over the time limit there is no purpose to further test
+                #TODO: why only for 20? 2400 should be given as a parameter
                 if runtime >= 2400 and number == 20:
                     stop = True
                     break

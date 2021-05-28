@@ -47,7 +47,7 @@
 ],
 "IP" : {"publicIPs": 1, "IPType": "IP4"},
 "comment-restrictions1": "Require_Provide to be read as: for 1 instance of component with id 2 there must be at least ",
-"comment-restrictions2": "We deleted the restriction related to lower bound of wordpress",             
+"comment-restrictions2": "We deleted the restriction related to lower bound of wordpress because it is not needed in the approach",
 "restrictions" : [
                   {"type":"Lower_Bound",  "compsIdList":[1], "bound": 2},
                   {"type":"Lower_Bound",  "compsIdList":[4], "bound": 2},

@@ -6,6 +6,18 @@ from copy import deepcopy
 
 # Reads the file received as parameter and builds the components list in the desired way
 # We use in code just a component's name and the requirements for cpu, memory and storage
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def get_components(file):
     with open(file) as f:
         components_list = []
@@ -22,6 +34,18 @@ def get_components(file):
 
 
 # Loads the list of constraints from the received file
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def get_constraints(file):
     with open(file) as f:
         json_list = json.load(f)
@@ -29,6 +53,18 @@ def get_constraints(file):
 
 
 # Returns a list with the offers and their requirements that will be used in code: cpu, memory, storage, price
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def get_offers(file):
     with open(file) as f:
         offers_list = []
@@ -44,7 +80,19 @@ def get_offers(file):
         return offers_list
 
 
-# Returns a list with the content of the received file, that represents the input from a problem solved with minizinc
+# Returns a list with the content of the received file, that represents the input from a problem solved with Minizinc
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def parse_existing_solution(file):
     with open(file) as f:
         json_list = json.load(f)
@@ -54,13 +102,37 @@ def parse_existing_solution(file):
 # This function computes the number of deployed instances for the component with the provided id
 # That means it goes trough the assignment matrix at row 'component_id' and adds all the elements
 # Since a value of 1 in the assignment matrix means 'deployed' we can find the occurrence of a certain component
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def compute_frequency(component_id, matrix):
     component_frequency = sum(matrix[component_id])
     return component_frequency
 
-
 # Checks on each machine if the component with parameter id and his conflict are both deployed
 # Returns true if no such conflict exists
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
+# I think constraints_list is not used in the function
 def check_conflicts(constraint, matrix, component_id, constraints_list):
     conflict_component_id = constraint['alphaCompId']
     for column in range(len(matrix[0])):
@@ -77,6 +149,18 @@ def check_conflicts(constraint, matrix, component_id, constraints_list):
 
 
 # Checks whether the component with provided id is deployed at least 'bound' times
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def check_lower_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['compsIdList'][0], matrix) >= constraint['bound']:
         return True
@@ -84,6 +168,18 @@ def check_lower_bound(constraint, matrix, component_id, constraints_list):
 
 
 # Checks whether the component with provided id is deployed at most 'bound' times
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def check_upper_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['compsIdList'][0], matrix) <= constraint['bound']:
         return True
@@ -91,6 +187,19 @@ def check_upper_bound(constraint, matrix, component_id, constraints_list):
 
 
 # Checks whether the component with provided id is deployed exactly 'bound' times
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
+#I think component_id, constraints_list are not used in the code
 def check_equal_bound(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['compsIdList'][0], matrix) == constraint['bound']:
         return True
@@ -98,6 +207,19 @@ def check_equal_bound(constraint, matrix, component_id, constraints_list):
 
 
 # This function checks whether the components with the provided id are both deployed in the system
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
+#I think component_id, constraints_list are not used in the code
 def check_exclusive_deployment(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
             and compute_frequency(constraint['betaCompId'], matrix) > 0:
@@ -108,6 +230,7 @@ def check_exclusive_deployment(constraint, matrix, component_id, constraints_lis
 # This function verifies that the numerical constraint between two components is respected
 # Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
 # This is a require provide constraint since we have limitations for both 'require' and 'provider'
+# TODO: add docstring; delete params which are not used
 def check_require_provide(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) * constraint['alphaCompIdInstances'] <= \
             compute_frequency(constraint['betaCompId'], matrix) * constraint['betaCompIdInstances']:
@@ -118,6 +241,7 @@ def check_require_provide(constraint, matrix, component_id, constraints_list):
 # This function is similar to require provide, but this time we have no knowledge about one component in the relation
 # Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
 # We know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
+# TODO: add docstring; delete params which are not used
 def check_provide(constraint, matrix, component_id, constraints_list):
     if compute_frequency(constraint['alphaCompId'], matrix) == 0 \
             or compute_frequency(constraint['betaCompId'], matrix) == 0:
@@ -130,6 +254,7 @@ def check_provide(constraint, matrix, component_id, constraints_list):
 
 # This function checks whether two components are in collocation relation.
 # A collocation relation means that on every machine where one of the components is deployed, the other one must be too.
+# TODO: add docstring; delete params which are not used
 def check_collocation(constraint, matrix, component_id, constraints_list):
     for column in range(len(matrix[0])):
         if matrix[constraint['alphaCompId']][column] != matrix[constraint['betaCompId']][column]:
@@ -139,6 +264,7 @@ def check_collocation(constraint, matrix, component_id, constraints_list):
 
 # This function checks that the component with provided id is deployed on every machine that allows it.
 # If there is a machine where the component would cause a conflict that machine is not included.
+# TODO: add docstring; delete params which are not used
 def check_full_deployment(constraint, matrix, component_id, constraints_list):
     conflicts = get_component_conflicts(constraint['alphaCompId'], constraints_list)
     for column in range(len(matrix[0])):
@@ -157,6 +283,7 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
 
 # A function that will handle a collocation constraint that was broken.
 # We check all the new machines, and we add all the missing components
+# TODO: add docstring; delete params which are not used
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
                        constraints_list, offers_list, initial_matrix):
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
@@ -170,6 +297,7 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
 
 # A function that will try to deploy the component with parameter id on any machine where it was not deployed.
 # It will do so only on the machine where no conflict would be created.
+# TODO: add docstring; delete params which are not used
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix):
     conflict_components = get_component_conflicts(constraint['alphaCompId'], constraints_list)
@@ -182,6 +310,7 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
 
 
 # A function that tries to fix a provide constraint that is false
+# TODO: add docstring; delete params which are not used
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix, check_new_columns):
     problem_component_id = None
@@ -227,8 +356,8 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
     matrix = add_column(new_matrix, problem_component_id)
     return matrix
 
-
 # A function that tries to fix a require_provide constraint that is false
+# TODO: add docstring
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix, check_new_columns):
     problem_component_id = None
@@ -609,12 +738,28 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
     # If the output is ok, we can write the solution to the corresponding file
     # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
-        minizinc_solution = minizinc_solution.replace('Input\\Greedy_Input\\', '')
+        # minizinc_solution = minizinc_solution.replace('Input\\Greedy_Input\\', '')
+        # minizinc_solution = minizinc_solution.replace('_Input.json', '')
+        # write_solution(f"Output\\Greedy_Output\\{greedy_type}\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
+
+        minizinc_solution = minizinc_solution.replace('Input/Greedy_Input/', '')
         minizinc_solution = minizinc_solution.replace('_Input.json', '')
-        write_solution(f"Output\\Greedy_Output\\{greedy_type}\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
+        write_solution(f"Output/Greedy_Output/{greedy_type}/{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
 # The actual 'solving' method, where we apply the previous functions to solve the problem
+"""Gets and prints the spreadsheet's header columns
+
+Args:
+    problem_file: The file location of the spreadsheet
+    offers_file: A flag used to print the columns to the console
+        (default is False)
+    minizinc_solution: ...
+    added_component: ...
+
+Returns:
+    list: a list of strings representing the header columns
+"""
 def solve_problem(problem_file, offers_file, minizinc_solution, added_component):
     components_list = get_components(problem_file)
 
@@ -649,7 +794,7 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
         write_solution(f"{minizinc_solution.replace('_Input.json', '')}_Output.csv", result, run_time)
         return
     # If we reach here it means we will need at least 1 new machine (for the added component)
-    # Using the get final matrix method we find out either the new assignment matrix or an error message
+    # Using the get_final_matrix method we find out either the new assignment matrix or an error message
     # The matrix that satisfies all requirements or an error message explaining what causes the error
     else:
         # This is the time before applying each algorithm so it is needed for both of them
@@ -678,9 +823,16 @@ if __name__ == '__main__':
     wordpress_instances = 3
     component_to_add = 0
 
+    # solve_problem(
+    #     f"Input\\Problem_Description\\{problem_name}.json",
+    #     f"Input\\Offers\\offers_{offers_number}.json",
+    #     f"Input\\Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
+    #     component_to_add
+    # )
+
     solve_problem(
-        f"Input\\Problem_Description\\{problem_name}.json",
-        f"Input\\Offers\\offers_{offers_number}.json",
-        f"Input\\Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
+        f"Input/Problem_Description/{problem_name}.json",
+        f"Input/Offers/offers_{offers_number}.json",
+        f"Input/Greedy_Input/{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
         component_to_add
     )

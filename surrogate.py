@@ -1,7 +1,7 @@
 import csv
 from minizinc import Instance, Model, Solver
 
-
+#TODO: add comments
 def solve_surrogate_minizinc(model_path, problem_instances_number, solver):
     # Load the model from the corresponding file
     surrogate = Model(model_path)
