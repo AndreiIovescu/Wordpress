@@ -4,21 +4,18 @@ import time
 from copy import deepcopy
 
 
-# Reads the file received as parameter and builds the components list in the desired way
-# We use in code just a component's name and the requirements for cpu, memory and storage
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def get_components(file):
+    """
+    Reads the file received as parameter and builds the components list in the desired way
+    We use in code just a component's name and the requirements for cpu, memory and storage
+
+    Args:
+        file: The file location
+
+    Returns:
+        components_list: A list of dictionaries, each dictionary representing a component used in the application
+        and the requirements that we use in the code
+    """
     with open(file) as f:
         components_list = []
         json_list = json.load(f)
@@ -33,39 +30,33 @@ def get_components(file):
     return components_list
 
 
-# Loads the list of constraints from the received file
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def get_constraints(file):
+    """
+    Loads the list of constraints from the received file
+
+    Args:
+       file: The file location
+
+    Returns:
+        json_list: a list of dictionaries, where each dictionary represents a constraint used in our problem and
+        the information we have about it
+    """
     with open(file) as f:
         json_list = json.load(f)
         return json_list['restrictions']
 
 
-# Returns a list with the offers and their requirements that will be used in code: cpu, memory, storage, price
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def get_offers(file):
+    """
+    Extracts from the parameter file a list with the virtual machine offers and their hardware requirements
+
+    Args:
+       file: The file location
+
+    Returns:
+        offers_list: A list of dictionaries, where each dictionary represents a virtual machine offer and it's hardware
+         requirements like: cpu, memory and storage
+    """
     with open(file) as f:
         offers_list = []
         json_list = json.load(f)
@@ -80,60 +71,54 @@ def get_offers(file):
         return offers_list
 
 
-# Returns a list with the content of the received file, that represents the input from a problem solved with Minizinc
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def parse_existing_solution(file):
+    """
+    Reads the content of the received file, that represents the input from a problem solved with Minizinc
+
+    Args:
+       file: The file location
+
+    Returns:
+        json_list: A list that contains information from a problem solved using MiniZinc. It's content are: the assignment
+         matrix, the type array and the price array
+    """
     with open(file) as f:
         json_list = json.load(f)
         return json_list
 
 
-# This function computes the number of deployed instances for the component with the provided id
-# That means it goes trough the assignment matrix at row 'component_id' and adds all the elements
-# Since a value of 1 in the assignment matrix means 'deployed' we can find the occurrence of a certain component
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def compute_frequency(component_id, matrix):
+    """
+    This function computes the number of deployed instances for the component with the provided id
+    That means it goes trough the assignment matrix at row 'component_id' and adds all the elements
+    Since a value of 1 in the assignment matrix means 'deployed' we can find the occurrence of a certain component
+
+    Args:
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        matrix: The assignment matrix on which the frequency is computed
+
+    Returns:
+       component_frequency: an integer representing the number of times that the component with id 'component_id' was
+       deployed in the application
+    """
     component_frequency = sum(matrix[component_id])
     return component_frequency
 
-# Checks on each machine if the component with parameter id and his conflict are both deployed
-# Returns true if no such conflict exists
-"""Gets and prints the spreadsheet's header columns
 
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
-# I think constraints_list is not used in the function
 def check_conflicts(constraint, matrix, component_id, constraints_list):
+    """
+    Checks on each machine if the component with parameter id and his conflict are both deployed
+    Returns true if no such conflict exists
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     conflict_component_id = constraint['alphaCompId']
     for column in range(len(matrix[0])):
         conflict_component_deployed = False
@@ -148,101 +133,116 @@ def check_conflicts(constraint, matrix, component_id, constraints_list):
     return True
 
 
-# Checks whether the component with provided id is deployed at least 'bound' times
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def check_lower_bound(constraint, matrix, component_id, constraints_list):
+    """
+    Checks whether the component with provided id is deployed at least 'bound' times
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['compsIdList'][0], matrix) >= constraint['bound']:
         return True
     return False
 
 
-# Checks whether the component with provided id is deployed at most 'bound' times
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
 def check_upper_bound(constraint, matrix, component_id, constraints_list):
+    """
+    Checks whether the component with provided id is deployed at most 'bound' times
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['compsIdList'][0], matrix) <= constraint['bound']:
         return True
     return False
 
 
-# Checks whether the component with provided id is deployed exactly 'bound' times
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
-#I think component_id, constraints_list are not used in the code
 def check_equal_bound(constraint, matrix, component_id, constraints_list):
+    """
+    Checks whether the component with provided id is deployed exactly 'bound' times
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['compsIdList'][0], matrix) == constraint['bound']:
         return True
     return False
 
 
-# This function checks whether the components with the provided id are both deployed in the system
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
-#I think component_id, constraints_list are not used in the code
 def check_exclusive_deployment(constraint, matrix, component_id, constraints_list):
+    """
+       This function checks whether the components with the provided id are both deployed in the system
+
+        Args:
+            constraint: The constraint instance that is going to be checked
+            matrix: The assignment matrix on which the constraint is going to be checked
+            component_id:
+            constraints_list:
+
+        Returns:
+            response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['alphaCompId'], matrix) > 0 \
             and compute_frequency(constraint['betaCompId'], matrix) > 0:
         return False
     return True
 
 
-# This function verifies that the numerical constraint between two components is respected
-# Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
-# This is a require provide constraint since we have limitations for both 'require' and 'provider'
-# TODO: add docstring; delete params which are not used
 def check_require_provide(constraint, matrix, component_id, constraints_list):
+    """
+    This function verifies that the numerical constraint between two components is respected
+    Ex: Wordpress requires at least three instances of mysql and mysql can serve at most 2 Wordpress
+    This is a require provide constraint since we have limitations for both 'require' and 'provider'
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['alphaCompId'], matrix) * constraint['alphaCompIdInstances'] <= \
             compute_frequency(constraint['betaCompId'], matrix) * constraint['betaCompIdInstances']:
         return True
     return False
 
 
-# This function is similar to require provide, but this time we have no knowledge about one component in the relation
-# Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
-# We know that http requires at least 1 wordpress can serve at most 3, but we know nothing about what wordpress offers.
-# TODO: add docstring; delete params which are not used
 def check_provide(constraint, matrix, component_id, constraints_list):
+    """
+    This function is similar to require provide, but this time we have no knowledge about one component in the relation
+    Ex:HTTP Balancer requires at least one wordpress instance and http balancer can serve at most 3 Wordpress instances.
+    We know that http requires at least 1 wordpress and can serve at most 3,
+    but we know nothing about what wordpress offers.
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     if compute_frequency(constraint['alphaCompId'], matrix) == 0 \
             or compute_frequency(constraint['betaCompId'], matrix) == 0:
         return True
@@ -252,20 +252,41 @@ def check_provide(constraint, matrix, component_id, constraints_list):
     return False
 
 
-# This function checks whether two components are in collocation relation.
-# A collocation relation means that on every machine where one of the components is deployed, the other one must be too.
-# TODO: add docstring; delete params which are not used
 def check_collocation(constraint, matrix, component_id, constraints_list):
+    """
+    This function checks whether two components are in collocation relation.
+    A collocation relation means that on every machine where one of the components is deployed,
+    the other one must be deployed too.
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list:
+
+    Returns:
+        response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     for column in range(len(matrix[0])):
         if matrix[constraint['alphaCompId']][column] != matrix[constraint['betaCompId']][column]:
             return False
     return True
 
 
-# This function checks that the component with provided id is deployed on every machine that allows it.
-# If there is a machine where the component would cause a conflict that machine is not included.
-# TODO: add docstring; delete params which are not used
 def check_full_deployment(constraint, matrix, component_id, constraints_list):
+    """
+    This function checks that the component with provided id is deployed on every machine that allows it.
+    If there is a machine where the component would cause a conflict that machine is not included.
+
+    Args:
+        constraint: The constraint instance that is going to be checked
+        matrix: The assignment matrix on which the constraint is going to be checked
+        component_id:
+        constraints_list: The list with all the constraints that our problem must fulfill
+
+    Returns:
+         response: boolean value that takes value True when the constraint is fulfilled or False otherwise
+    """
     conflicts = get_component_conflicts(constraint['alphaCompId'], constraints_list)
     for column in range(len(matrix[0])):
         deployed_components = get_deployed_components(matrix, column)
@@ -355,6 +376,7 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
     # If we can't place the component on what we already have, we have to get a new machine and update the matrix
     matrix = add_column(new_matrix, problem_component_id)
     return matrix
+
 
 # A function that tries to fix a require_provide constraint that is false
 # TODO: add docstring
@@ -732,16 +754,19 @@ def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
 
 # This function is used to verify if the problem was solved or not
 def validate_result(result, minizinc_solution, greedy_type, runtime):
+    """
+
+    :param result:
+    :param minizinc_solution:
+    :param greedy_type:
+    :param runtime:
+    """
     # If the length of the output is 1, it means the output is just the error message saying what went wrong
     if len(result) == 1:
         print(result)
     # If the output is ok, we can write the solution to the corresponding file
     # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
-        # minizinc_solution = minizinc_solution.replace('Input\\Greedy_Input\\', '')
-        # minizinc_solution = minizinc_solution.replace('_Input.json', '')
-        # write_solution(f"Output\\Greedy_Output\\{greedy_type}\\{minizinc_solution}_{greedy_type}.csv", result, runtime)
-
         minizinc_solution = minizinc_solution.replace('Input/Greedy_Input/', '')
         minizinc_solution = minizinc_solution.replace('_Input.json', '')
         write_solution(f"Output/Greedy_Output/{greedy_type}/{minizinc_solution}_{greedy_type}.csv", result, runtime)
