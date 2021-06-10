@@ -302,11 +302,26 @@ def check_full_deployment(constraint, matrix, component_id, constraints_list):
     return True
 
 
-# A function that will handle a collocation constraint that was broken.
-# We check all the new machines, and we add all the missing components
-# TODO: add docstring; delete params which are not used
 def handle_collocation(constraint, new_matrix, types, component_id, components_list,
-                       constraints_list, offers_list, initial_matrix):
+                       constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+       A function that will handle a collocation constraint that was broken.
+       We check all the new machines, and we add all the missing components.
+
+       Args:
+           constraint: The constraint instance that is going to be checked
+           new_matrix: The assignment matrix on which the constraint is going to be checked
+           types:
+           component_id:
+           components_list:
+           constraints_list:
+           offers_list:
+           initial_matrix:
+           check_new_columns:
+
+       Returns:
+            new_matrix: The new assignment matrix, updated after trying to fix the false constraint
+       """
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components = get_deployed_components(new_matrix, column)
         if constraint['alphaCompId'] in deployed_components and constraint['betaCompId'] not in deployed_components:
@@ -316,11 +331,26 @@ def handle_collocation(constraint, new_matrix, types, component_id, components_l
     return new_matrix
 
 
-# A function that will try to deploy the component with parameter id on any machine where it was not deployed.
-# It will do so only on the machine where no conflict would be created.
-# TODO: add docstring; delete params which are not used
 def handle_full_deployment(constraint, new_matrix, types, component_id, components_list,
-                           constraints_list, offers_list, initial_matrix):
+                           constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+        A function that will try to deploy the component with parameter id on any machine where it was not deployed.
+        It will do so only on the machine where no conflict would be created.
+
+        Args:
+            constraint: The constraint instance that is going to be checked
+            new_matrix: The assignment matrix on which the constraint is going to be checked
+            types:
+            component_id:
+            components_list:
+            constraints_list: The list with all the constraints that our problem must fulfill
+            offers_list:
+            initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+            check_new_columns:
+
+        Returns:
+            new_matrix: The new assignment matrix, updated after trying to fix the false constraint
+    """
     conflict_components = get_component_conflicts(constraint['alphaCompId'], constraints_list)
     for column in range(len(initial_matrix[0]), len(new_matrix[0])):
         deployed_components = get_deployed_components(new_matrix, column)
@@ -330,10 +360,27 @@ def handle_full_deployment(constraint, new_matrix, types, component_id, componen
     return new_matrix
 
 
-# A function that tries to fix a provide constraint that is false
-# TODO: add docstring; delete params which are not used
 def handle_provide(constraint, new_matrix, types, component_id, components_list,
                    constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+            A function that tries to fix a provide constraint that is false
+
+            Args:
+                constraint: The constraint instance that is going to be checked
+                new_matrix: The assignment matrix on which the constraint is going to be checked
+                types: The type array that corresponds to the assignment matrix
+                component_id: The index of the assignment matrix row that corresponds to the involved component
+                components_list: The list of components involved in our problem and their hardware requirements
+                constraints_list: The list with all the constraints that our problem must fulfill
+                offers_list: The list of virtual machine offers from which we can choose
+                initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+                check_new_columns: A boolean variable, if it is True we can check the machines that were not in the
+                                   initial setup and if it is False we just take a new machine for a new component
+
+            Returns:
+                new_matrix: The new assignment matrix, updated after trying to fix the false constraint
+        """
+
     problem_component_id = None
 
     # To know which component we will have to add, we must identify the problem component
@@ -378,10 +425,27 @@ def handle_provide(constraint, new_matrix, types, component_id, components_list,
     return matrix
 
 
-# A function that tries to fix a require_provide constraint that is false
-# TODO: add docstring
 def handle_require_provide(constraint, new_matrix, types, component_id, components_list,
                            constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+            A function that tries to fix a require_provide constraint that is false
+
+            Args:
+                constraint: The constraint instance that is going to be checked
+                new_matrix: The assignment matrix on which the constraint is going to be checked
+                types: The type array that corresponds to the assignment matrix
+                component_id: The index of the assignment matrix row that corresponds to the involved component
+                components_list: The list of components involved in our problem and their hardware requirements
+                constraints_list: The list with all the constraints that our problem must fulfill
+                offers_list: The list of virtual machine offers from which we can choose
+                initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+                check_new_columns: A boolean variable, if it is True we can check the machines that were not in the
+                                   initial setup and if it is False we just take a new machine for a new component
+
+                Returns:
+                    new_matrix: The new assignment matrix, updated after trying to fix the false constraint
+    """
+
     problem_component_id = None
 
     # To know which component we will have to add, we must identify the problem component
@@ -425,17 +489,50 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
     return matrix
 
 
-# A function that will return a message to inform the user that the maximum number of component with provided id
-# was already deployed, therefore we can no longer deploy an instance of that component
 def handle_upper_bound(constraint, new_matrix, types, component_id, components_list,
-                       constraints_list, offers_list, initial_matrix):
+                       constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+            A function that will return a message to inform the user that the maximum number of component with provided
+            id was already deployed, therefore we can no longer deploy an instance of that component
+
+            Args:
+                constraint: The constraint instance that is going to be checked
+                new_matrix:
+                types:
+                component_id:
+                components_list:
+                constraints_list:
+                offers_list:
+                initial_matrix:
+                check_new_columns:
+
+            Returns:
+                message: Message that explains that this constraint cannot be fixed
+    """
     return f"Upper bound reached for the component with id {constraint['compsIdList'][0]}." \
            f"No more instances can be deployed."
 
 
-# A function that will return a message to inform the user that the component with provided id
-# Must have an exact number of instances
-def handle_equal_bound(constraint, new_matrix, initial_matrix, component_id, constraints_list):
+def handle_equal_bound(constraint, new_matrix, types, component_id, components_list,
+                       constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+                A function that will return a message to inform the user that the component with provided id
+                Must have an exact number of instances
+
+                Args:
+                    constraint: The constraint instance that is going to be checked
+                    new_matrix:
+                    types:
+                    component_id:
+                    components_list:
+                    constraints_list:
+                    offers_list:
+                    initial_matrix:
+                    check_new_columns:
+
+                Returns:
+                    message: Message that explains that this constraint cannot be fixed
+        """
     return f"Cannot deploy another instance of component with id {component_id}. There should be exactly" \
            f" {constraint['bound']} instances of this component."
 
