@@ -749,29 +749,57 @@ def check_constraints(constraints_list, matrix, component_id):
     return false_constraints
 
 
-# Builds a new matrix by adding a column to the one received as parameter
-# The new column has 0 on every row but the one corresponding to the component with the parameter id
 def add_column(matrix, component_id):
-    return_matrix = deepcopy(matrix)
+    """
+    Builds a new matrix by adding a column to the one received as parameter
+    The new column has 0 on every row but the one corresponding to the component with the parameter id
+
+    Args:
+        matrix: The assignment matrix on which we will verify if we can place a new component
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+
+    Returns:
+        new_matrix: A new assignment matrix obtained by adding a new column to the given one, with the component
+                    with given id deployed on it
+    """
+    new_matrix = deepcopy(matrix)
     row_counter = 0
-    for row in return_matrix:
+    for row in new_matrix:
         if row_counter == component_id:
             row.append(1)
         else:
             row.append(0)
         row_counter += 1
-    return return_matrix
+    return new_matrix
 
 
-# A function that gets the name of each false constraint and calls the corresponding function to handle it
 def handle_false_constraints(false_constraints, new_matrix, types, component_id, components_list,
-                             constraints_list, offers_list, initial_matrix, check_initial_matrix):
+                             constraints_list, offers_list, initial_matrix, check_new_columns):
+
+    """
+    A function that gets the name of each false constraint and calls the corresponding function to handle it
+
+    Args:
+        false_constraints: A list with constraints that were found to be false
+        new_matrix: The assignment matrix on which the constraint is going to be checked
+        types: The type array that corresponds to the assignment matrix
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        components_list: The list of components involved in our problem and their hardware requirements
+        constraints_list: The list with all the constraints that our problem must fulfill
+        offers_list: The list of virtual machine offers from which we can choose
+        initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+        check_new_columns: A boolean variable, if it is True we can check the machines that were not in the
+                           initial setup and if it is False we just take a new machine for a new component
+
+    Returns:
+        new_matrix: The new assignment matrix, updated after trying to fix the false constraints
+    """
     for constraint in false_constraints:
         constraint_name = constraint['type']
         # All handling functions follow the convention: handle_constraint_name
         new_matrix = eval(
             f'handle_{constraint_name}'.lower() + "(constraint, new_matrix, types, component_id, components_list,"
-                                                  "constraints_list, offers_list, initial_matrix, check_initial_matrix)"
+                                                  "constraints_list, offers_list, initial_matrix, check_new_columns)"
         )
         # We check after every handle function call if the false constraint can be fixed or not
         # In general the result should be a new matrix, after fixing a constraint
@@ -781,27 +809,55 @@ def handle_false_constraints(false_constraints, new_matrix, types, component_id,
     return new_matrix
 
 
-# A function that handles the false constraints until we have a matrix that satisfies all the constraints
-def get_final_matrix(matrix, types, component_id, components_list, component_constraints,
-                     constraints_list, offers_list, initial_matrix, check_initial_matrix):
-    false_constraints = check_constraints(constraints_list, matrix, component_id)
+def get_final_matrix(new_matrix, types, component_id, components_list, component_constraints,
+                     constraints_list, offers_list, initial_matrix, check_new_columns):
+    """
+    A function that handles the false constraints until we have a matrix that satisfies all the constraints
+
+    Args:
+        new_matrix: The assignment matrix on which the constraint is going to be checked
+        types: The type array that corresponds to the assignment matrix
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        components_list: The list of components involved in our problem and their hardware requirements
+        component_constraints: The list of constraints that involve the component with given id
+        constraints_list: The list with all the constraints that our problem must fulfill
+        offers_list: The list of virtual machine offers from which we can choose
+        initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+        check_new_columns: A boolean variable, if it is True we can check the machines that were not in the
+                           initial setup and if it is False we just take a new machine for a new component
+
+    Returns:
+        new_matrix: The new assignment matrix, updated after trying to fix the all the false constraints
+    """
+    false_constraints = check_constraints(constraints_list, new_matrix, component_id)
     while false_constraints:
-        matrix = handle_false_constraints(
-            false_constraints, matrix, types, component_id, components_list,
-            constraints_list, offers_list, initial_matrix, check_initial_matrix
+        new_matrix = handle_false_constraints(
+            false_constraints, new_matrix, types, component_id, components_list,
+            constraints_list, offers_list, initial_matrix, check_new_columns
         )
         # After every attempt of fixing false constraints we want to see if the handling was able to run
         # If all went ok, then matrix will be the expected way, but if we were not able to fix then it's type is str
         # It will contain the error message regarding what went wrong
-        if type(matrix) == str:
-            return matrix
-        false_constraints = check_constraints(constraints_list, matrix, component_id)
-    return matrix
+        if type(new_matrix) == str:
+            return new_matrix
+        false_constraints = check_constraints(constraints_list, new_matrix, component_id)
+    return new_matrix
 
 
-# A function that returns a list containing the resource that each of the new components consume
-# For each machine we have a dictionary with the sum of resources on that machine, all of those held in a list
 def get_new_resources(new_matrix, initial_matrix, components_list):
+    """
+    A function that returns a list containing the resource that each of the new components consume
+    For each machine we have a dictionary with the sum of resources on that machine, all of those held in a list
+
+    Args:
+        new_matrix: The assignment matrix on which the constraint is going to be checked
+        initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+        components_list: List that contains hardware requirements for all the components of our application
+
+    Returns:
+        new_components_resources: List that contains the hardware requirements of all the new components that have to
+                                  to be added to our application
+    """
     new_components_resources = []
     resources_keys = [key for key in components_list[0] if key != 'Name']
     # We check only the new machines
@@ -816,15 +872,33 @@ def get_new_resources(new_matrix, initial_matrix, components_list):
     return new_components_resources
 
 
-# Sorts the received list in ascending order after the price
 def sort_offers(offers_list):
+    """
+    Sorts the received list in ascending order after the price
+
+    Args:
+        offers_list: The list that contains all the virtual machine offers, with their hardware requirements
+
+    Returns:
+        sorted_list: The offer list received as parameter, sorted in ascending order after their renting price
+    """
     sorted_list = sorted(offers_list, key=lambda i: (i['Price']))
     return sorted_list
 
 
-# This function receives the list of offers and a list with the resources needed by the new components to be added
-# It will return a list with the id of the chosen machines
 def choose_machine(offers_list, components_resources):
+    """
+    This function receives the list of offers and a list with the resources needed by the new components to be added
+    It will return a list with the id of the chosen machines
+
+    Args:
+       offers_list: The list that contains all the virtual machine offers, with their hardware requirements
+       components_resources: List that contains the hardware requirements of all the new components that have to
+                             to be added to our application
+
+    Returns:
+       new machines: The id's of the machines that have been selected to deploy the new components on
+    """
     new_machines = []
     sorted_offers = deepcopy(offers_list)
     # To choose a corresponding machine, we sort the list of offers in ascending order after price
@@ -835,8 +909,8 @@ def choose_machine(offers_list, components_resources):
         matching_offers = [
             offer for offer in sorted_offers
             if offer['Cpu'] >= machine_resources['Cpu']
-               and offer['Memory'] >= machine_resources['Memory']
-               and offer['Storage'] >= machine_resources['Storage']
+            and offer['Memory'] >= machine_resources['Memory']
+            and offer['Storage'] >= machine_resources['Storage']
         ]
 
         # We take the first machine from the matching offers
@@ -845,12 +919,26 @@ def choose_machine(offers_list, components_resources):
     return new_machines
 
 
-# A function that will verify if we can place the component with parameter id anywhere on the matrix received
-# It returns the column/machine where we can deploy the component (if it exists) or -1 otherwise
-def check_existing_machines(matrix, types_array, component_id, components_list, constraints_list, offers_list):
+def check_existing_machines(matrix, types, component_id, components_list, constraints_list, offers_list):
+    """
+    A function that will verify if we can place the component with parameter id anywhere on the matrix received
+    It returns the column/machine where we can deploy the component (if it exists) or -1 otherwise
+
+    Args:
+        matrix: The assignment matrix on which the constraint is going to be checked
+        types: The type array that corresponds to the assignment matrix
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        components_list: The list of components involved in our problem and their hardware requirements
+        constraints_list: The list with all the constraints that our problem must fulfill
+        offers_list: The list of virtual machine offers from which we can choose
+
+    Returns:
+       column: Integer value that represents the already deployed column/machine on which we can place a new component.
+               If there is no such column, it takes value -1
+    """
     for column in range(len(matrix[component_id])):
         if check_column_placement(matrix, column, component_id, constraints_list):
-            free_space = get_free_space(types_array[column], matrix, column, offers_list, components_list)
+            free_space = get_free_space(types[column], matrix, column, offers_list, components_list)
             if check_enough_space(free_space, component_id, components_list):
                 test_matrix = deepcopy(matrix)
                 test_matrix[component_id][column] = 1
