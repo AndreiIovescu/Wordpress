@@ -445,7 +445,6 @@ def handle_require_provide(constraint, new_matrix, types, component_id, componen
         Returns:
             new_matrix: The new assignment matrix, updated after trying to fix the false constraint
     """
-
     problem_component_id = None
 
     # To know which component we will have to add, we must identify the problem component
@@ -948,8 +947,22 @@ def check_existing_machines(matrix, types, component_id, components_list, constr
     return -1
 
 
-# We can have 2 kinds of solution handling
 def get_solution(matrix, initial_matrix, types, prices, offers_list, components_list):
+    """
+    We can have 2 kinds of solution handling
+
+    Args:
+       matrix: The assignment matrix on which the constraint is going to be checked
+       initial_matrix: The first assignment matrix configuration, before trying to solve the problem
+       types: The type array that corresponds to the assignment matrix
+       prices: The price array that corresponds to the assignment matrix
+       offers_list: The list of virtual machine offers from which we can choose
+       components_list: The list of components involved in our problem and their hardware requirements
+
+    Returns:
+       column: Integer value that represents the already deployed column/machine on which we can place a new component.
+              If there is no such column, it takes value -1
+   """
     new_components_resources = get_new_resources(matrix, initial_matrix, components_list)
 
     # If this is empty, it means we were able to deploy the component/s on the machines we already had
@@ -976,9 +989,16 @@ def get_solution(matrix, initial_matrix, types, prices, offers_list, components_
     return output_dictionary
 
 
-# This function receives a file and a dictionary that contains the problem solution
-# It will write the solution in the file, using json convention
 def write_solution(file, dictionary, runtime):
+    """
+    This function receives a file and a dictionary that contains the problem solution
+    It will write the solution in the file, using csv convention
+
+    Args:
+       file: Path to the output file that we want to write to
+       dictionary: A list of dictionaries that contain our problem's output (minimum price, minimum price for each vm)
+       runtime: The time it took for the problem to be solved
+    """
     with open(file, mode='w', newline='') as f:
         fieldnames = ['Price min value', 'Price for each machine', 'Time']
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -989,55 +1009,90 @@ def write_solution(file, dictionary, runtime):
                          'Time': runtime})
 
 
-# This method handles the case where we can solve the problem just by adding one more component to the initial matrix
-# We just have to update the assignment matrix accordingly as the price and type array will remain the same
-# This is done by calling the get_solution method
-def solve_existing_machines(assignment_matrix, component_id, vm_types, prices,
+def solve_existing_machines(assignment_matrix, component_id, types, prices,
                             components_list, new_component_column, offers_list):
+    """
+    This method handles the case where we can solve the problem just by adding one more component to the initial matrix
+    We just have to update the assignment matrix accordingly as the price and type array will remain the same
+    This is done by calling the get_solution method
+
+    Args:
+       assignment_matrix: The assignment matrix that we work with
+       component_id: The index of the assignment matrix row that corresponds to the involved component
+       types: The type array that corresponds to the assignment matrix
+       prices: The price array that corresponds to the assignment matrix
+       components_list: The list of components involved in our problem and their hardware requirements
+       new_component_column: The machine/column where the component with given id will be placed
+       offers_list: The list of virtual machine offers from which we can choose
+
+    Returns:
+       output_dictionary: A list of dictionaries that contain our problem's output
+                          (minimum price, minimum price for each vm)
+    """
     new_matrix = deepcopy(assignment_matrix)
     new_matrix[component_id][new_component_column] = 1
-    output_dictionary = get_solution(assignment_matrix, assignment_matrix, vm_types,
+    output_dictionary = get_solution(assignment_matrix, assignment_matrix, types,
                                      prices, offers_list, components_list)
     return output_dictionary
 
 
-# This method is used to apply the suitable greedy algorithm of the two options (min vm or distinct vm)
-# Since the process is almost identical, we have this method that can apply both of them
-# We know which one to apply because of the greedy type parameter (can be "min_vm" or "distinct_vm")
-def greedy(assignment_matrix, component_id, vm_types, prices, components_list,
+def greedy(assignment_matrix, component_id, types, prices, components_list,
            component_constraints, constraints_list, offers_list, greedy_type):
+    """
+    This method is used to apply the suitable greedy algorithm of the two options (min vm or distinct vm)
+    Since the process is almost identical, we have this method that can apply both of them
+    We know which one to apply because of the greedy type parameter (can be "min_vm" or "distinct_vm")
+
+    Args:
+        assignment_matrix: The first assignment matrix configuration, before trying to solve the problem
+        component_id: The index of the assignment matrix row that corresponds to the involved component
+        types: The type array that corresponds to the assignment matrix
+        prices: The price array that corresponds to the assignment matrix
+        components_list: The list of components involved in our problem and their hardware requirements
+        component_constraints: The constraints that involve the component with given id
+        constraints_list: The list with all the constraints that our problem must fulfill
+        offers_list: The list of virtual machine offers from which we can choose
+        greedy_type: We need to specify which type of Greedy approach we will use to solve the problem
+                     The 2 possible values are min_vm or distinct_vm
+
+    Returns:
+        output_dictionary: A list of dictionaries that contain our problem's output
+                          (minimum price, minimum price for each vm)
+                          If the problem can't be solved this will be a message that tries to explain what went wrong
+    """
     new_matrix = deepcopy(assignment_matrix)
     new_matrix = add_column(new_matrix, component_id)
 
     if greedy_type == "min_vm":
         new_matrix = get_final_matrix(
-            new_matrix, vm_types, component_id, components_list, component_constraints,
+            new_matrix, types, component_id, components_list, component_constraints,
             constraints_list, offers_list, assignment_matrix, "Yes"
         )
     elif greedy_type == "distinct_vm":
         new_matrix = get_final_matrix(
-            new_matrix, vm_types, component_id, components_list, component_constraints,
+            new_matrix, types, component_id, components_list, component_constraints,
             constraints_list, offers_list, assignment_matrix, "No"
         )
 
     if type(new_matrix) == str:
         return new_matrix
     else:
-        new_vm_types = deepcopy(vm_types)
+        new_vm_types = deepcopy(types)
         new_price_array = deepcopy(prices)
         output_dictionary = get_solution(new_matrix, assignment_matrix, new_vm_types,
                                          new_price_array, offers_list, components_list)
         return output_dictionary
 
 
-# This function is used to verify if the problem was solved or not
 def validate_result(result, minizinc_solution, greedy_type, runtime):
     """
+    This function is used to verify if the problem was solved or not
 
-    :param result:
-    :param minizinc_solution:
-    :param greedy_type:
-    :param runtime:
+    Args:
+        result: The result that was obtained after solving the problem
+        minizinc_solution: The name of the minizinc problem that was used as input to our problem
+        greedy_type: The greedy method that was used to obtain this particular result
+        runtime: The time that it took for the problem to be solved
     """
     # If the length of the output is 1, it means the output is just the error message saying what went wrong
     if len(result) == 1:
@@ -1050,22 +1105,16 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
         write_solution(f"Output/Greedy_Output/{greedy_type}/{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
-# The actual 'solving' method, where we apply the previous functions to solve the problem
-"""Gets and prints the spreadsheet's header columns
-
-Args:
-    problem_file: The file location of the spreadsheet
-    offers_file: A flag used to print the columns to the console
-        (default is False)
-    minizinc_solution: ...
-    added_component: ...
-
-Returns:
-    list: a list of strings representing the header columns
-"""
-
-
 def solve_problem(problem_file, offers_file, minizinc_solution, added_component):
+    """
+    The actual 'solving' method, where we apply the previous functions to solve the problem
+
+    Args:
+        problem_file: The path to the file that contains the problem information (the components and constraints)
+        offers_file: The path to the file that contains the virtual machine offers
+        minizinc_solution: The path to the minizinc solution that will be used as input to our problem
+        added_component: The id of the component that we want to add to the application
+    """
     components_list = get_components(problem_file)
 
     constraints_list = get_constraints(problem_file)
