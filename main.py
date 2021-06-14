@@ -1173,13 +1173,16 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
 
 if __name__ == '__main__':
     problem_name = "Wordpress"
-    offers_number = 20
-    wordpress_instances = 3
+    offers = [20, 40, 250, 500]
+    lower_bound = 3
+    upper_bound = 12
     component_to_add = 0
 
-    solve_problem(
-        f"Input/Problem_Description/{problem_name}.json",
-        f"Input/Offers/offers_{offers_number}.json",
-        f"Input/Greedy_Input/{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
-        component_to_add
-    )
+    for component_instances in range(lower_bound, upper_bound):
+        for offers_number in offers:
+            solve_problem(
+                f"Input/Problem_Description/{problem_name}.json",
+                f"Input/Offers/offers_{offers_number}.json",
+                f"Input/Greedy_Input/{problem_name}{component_instances}_Offers{offers_number}_Input.json",
+                component_to_add
+            )
