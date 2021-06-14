@@ -1084,7 +1084,7 @@ def greedy(assignment_matrix, component_id, types, prices, components_list,
         return output_dictionary
 
 
-def validate_result(result, minizinc_solution, greedy_type, runtime):
+def validate_result(result, minizinc_solution, greedy_type, runtime, initial_number):
     """
     This function is used to verify if the problem was solved or not
 
@@ -1093,15 +1093,19 @@ def validate_result(result, minizinc_solution, greedy_type, runtime):
         minizinc_solution: The name of the minizinc problem that was used as input to our problem
         greedy_type: The greedy method that was used to obtain this particular result
         runtime: The time that it took for the problem to be solved
+        initial_number: The initial number of deployed components
     """
-    # If the length of the output is 1, it means the output is just the error message saying what went wrong
-    if len(result) == 1:
+    # If the type the output is str, it means the output is just the error message saying what went wrong
+    if type(result) == str:
         print(result)
     # If the output is ok, we can write the solution to the corresponding file
     # We use the minizinc solution name to create the name for the output csv, to which we also add the greedy type
     else:
         minizinc_solution = minizinc_solution.replace('Input/Greedy_Input/', '')
         minizinc_solution = minizinc_solution.replace('_Input.json', '')
+        file_name = minizinc_solution.split('_')
+        file_name[0] = file_name[0].replace(f'{initial_number}',f'{initial_number + 1}')
+        minizinc_solution = file_name[0] + "_" + file_name[1]
         write_solution(f"Output/Greedy_Output/{greedy_type}/{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
@@ -1130,6 +1134,8 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
     component_id = added_component
     # Get the constraints that involve the added component
     component_constraints = get_component_constraints(component_id, constraints_list)
+
+    component_instances_initial = compute_frequency(added_component, assignment_matrix)
 
     start_time = time.time()
 
@@ -1165,8 +1171,9 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
 
         run_time_distinct_vm = time.time() - start_time + intermediary_time
 
-        validate_result(result_min_vm, minizinc_solution, "MinVM", run_time_min_vm)
-        validate_result(result_distinct_vm, minizinc_solution, "DistinctVM", run_time_distinct_vm)
+        validate_result(result_min_vm, minizinc_solution, "MinVM", run_time_min_vm, component_instances_initial)
+        validate_result(result_distinct_vm, minizinc_solution, "DistinctVM",
+                        run_time_distinct_vm, component_instances_initial)
 
         return
 
