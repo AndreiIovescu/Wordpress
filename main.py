@@ -1177,13 +1177,6 @@ if __name__ == '__main__':
     wordpress_instances = 3
     component_to_add = 0
 
-    # solve_problem(
-    #     f"Input\\Problem_Description\\{problem_name}.json",
-    #     f"Input\\Offers\\offers_{offers_number}.json",
-    #     f"Input\\Greedy_Input\\{problem_name}{wordpress_instances}_Offers{offers_number}_Input.json",
-    #     component_to_add
-    # )
-
     solve_problem(
         f"Input/Problem_Description/{problem_name}.json",
         f"Input/Offers/offers_{offers_number}.json",
