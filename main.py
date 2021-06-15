@@ -2,6 +2,7 @@ import csv
 import json
 import time
 from copy import deepcopy
+from pathlib import Path
 
 
 def get_components(file):
@@ -1187,9 +1188,11 @@ if __name__ == '__main__':
 
     for component_instances in range(lower_bound, upper_bound):
         for offers_number in offers:
-            solve_problem(
-                f"Input/Problem_Description/{problem_name}.json",
-                f"Input/Offers/offers_{offers_number}.json",
-                f"Input/Greedy_Input/{problem_name}{component_instances}_Offers{offers_number}_Input.json",
-                component_to_add
-            )
+            input_file = Path(f"Input/Greedy_Input/{problem_name}{component_instances}_Offers{offers_number}_Input.json")
+            if input_file.is_file():
+                solve_problem(
+                    f"Input/Problem_Description/{problem_name}.json",
+                    f"Input/Offers/offers_{offers_number}.json",
+                    f"Input/Greedy_Input/{problem_name}{component_instances}_Offers{offers_number}_Input.json",
+                    component_to_add
+                )
