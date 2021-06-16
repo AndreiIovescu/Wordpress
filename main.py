@@ -1038,7 +1038,7 @@ def solve_existing_machines(assignment_matrix, component_id, types, prices,
 
 
 def greedy(assignment_matrix, component_id, types, prices, components_list,
-           component_constraints, constraints_list, offers_list, greedy_type):
+           component_constraints, constraints_list, offers_list, greedy_type, component_goal):
     """
     This method is used to apply the suitable greedy algorithm of the two options (min vm or distinct vm)
     Since the process is almost identical, we have this method that can apply both of them
@@ -1055,14 +1055,20 @@ def greedy(assignment_matrix, component_id, types, prices, components_list,
         offers_list: The list of virtual machine offers from which we can choose
         greedy_type: We need to specify which type of Greedy approach we will use to solve the problem
                      The 2 possible values are min_vm or distinct_vm
+        component_goal:
 
     Returns:
         output_dictionary: A list of dictionaries that contain our problem's output
                           (minimum price, minimum price for each vm)
                           If the problem can't be solved this will be a message that tries to explain what went wrong
     """
-    new_matrix = deepcopy(assignment_matrix)
-    new_matrix = add_column(new_matrix, component_id)
+    if component_goal:
+        new_matrix = deepcopy(assignment_matrix)
+        while compute_frequency(component_id, new_matrix) < component_goal:
+            new_matrix = add_column(new_matrix, component_id)
+    else:
+        new_matrix = deepcopy(assignment_matrix)
+        new_matrix = add_column(new_matrix, component_id)
 
     if greedy_type == "min_vm":
         new_matrix = get_final_matrix(
@@ -1110,7 +1116,7 @@ def validate_result(result, minizinc_solution, greedy_type, runtime, initial_num
         write_solution(f"Output/Greedy_Output/{greedy_type}/{minizinc_solution}_{greedy_type}.csv", result, runtime)
 
 
-def solve_problem(problem_file, offers_file, minizinc_solution, added_component):
+def solve_problem(problem_file, offers_file, minizinc_solution, added_component, component_goal):
     """
     The actual 'solving' method, where we apply the previous functions to solve the problem
 
@@ -1119,6 +1125,8 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
         offers_file: The path to the file that contains the virtual machine offers
         minizinc_solution: The path to the minizinc solution that will be used as input to our problem
         added_component: The id of the component that we want to add to the application
+        component_goal: The number of instances that we want to have deployed in the system of the added component
+                        Can be null, if we only want to add 1 instance
     """
     components_list = get_components(problem_file)
 
@@ -1162,13 +1170,13 @@ def solve_problem(problem_file, offers_file, minizinc_solution, added_component)
         # We save it now so we can add it later to the second algorithm
         intermediary_time = time.time() - start_time
         result_min_vm = greedy(assignment_matrix, component_id, vm_types, prices, components_list,
-                               component_constraints, constraints_list, offers_list, "min_vm")
+                               component_constraints, constraints_list, offers_list, "min_vm", component_goal)
 
         run_time_min_vm = time.time() - start_time
         start_time = time.time()
 
         result_distinct_vm = greedy(assignment_matrix, component_id, vm_types, prices, components_list,
-                                    component_constraints, constraints_list, offers_list, "distinct_vm")
+                                    component_constraints, constraints_list, offers_list, "distinct_vm", component_goal)
 
         run_time_distinct_vm = time.time() - start_time + intermediary_time
 
@@ -1194,5 +1202,15 @@ if __name__ == '__main__':
                     f"Input/Problem_Description/{problem_name}.json",
                     f"Input/Offers/offers_{offers_number}.json",
                     f"Input/Greedy_Input/{problem_name}{component_instances}_Offers{offers_number}_Input.json",
-                    component_to_add
+                    component_to_add,
+                    None
                 )
+            elif offers_number != 500:
+                solve_problem(
+                    f"Input/Problem_Description/{problem_name}.json",
+                    f"Input/Offers/offers_{offers_number}.json",
+                    f"Input/Greedy_Input/{problem_name}7_Offers{offers_number}_Input.json",
+                    component_to_add,
+                    component_instances
+                )
+
