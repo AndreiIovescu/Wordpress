@@ -133,9 +133,9 @@ if __name__ == '__main__':
     upper_bound = int(input(f"Introduce the upper bound for the number of {problem_name} instances:\n"))
     time_limit = int(input("Introduce the time limit(in seconds) for each problem\n"))
     model_file = f"Models\\{problem_name}.mzn"
-    Solvers = ["chuffed", "gecode", "or-tools"]
+    solvers = ["chuffed", "gecode", "or-tools"]
     offers_numbers = [20, 40, 250, 500]
-    for solver in Solvers:
+    for solver in solvers:
         stop = False
         for component_instances in range(lower_bound, upper_bound):
             if stop:
