@@ -5,6 +5,13 @@ import time
 import os
 import json
 
+"""
+This file is used to access the MiniZinc Python Interface.
+Using it we solve every possible instance of our problem: WordpressN_OffersVMNR
+For every N in [3,4,...,12] and VMNR in [20, 40, 250, 500]
+
+"""
+
 
 def get_min_machine_number(file, component_number):
     """

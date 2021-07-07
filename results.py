@@ -1,5 +1,11 @@
 import pandas as pd
 from pathlib import Path
+"""
+This file is used to combine the csv files that contain the results of a specific problem in one file.
+It goes trough every problem instance and if there are any corresponding results file, it will merge them.
+This is done for a faster result interpretation. 
+"""
+
 
 if __name__ == '__main__':
     problem_name = "Wordpress"

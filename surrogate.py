@@ -1,6 +1,13 @@
 import csv
 from minizinc import Instance, Model, Solver
 
+"""
+This file is used to run a surrogate problem needed before solving the main one.
+We solve it with the MiniZinc Python Interface and write the results to a csv file.
+The file will contain the relationship between the number of wordpress components and the 
+number of virtual machines that are needed for deployment. (3 wordpress - 8 machines, 4 wordpress - 10 machines, ...)
+"""
+
 
 def solve_surrogate_minizinc(model_path, problem_instances_number, solver):
     """

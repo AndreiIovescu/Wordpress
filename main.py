@@ -4,6 +4,13 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+"""
+This file is used to load an input obtained with MiniZinc.
+Our goal is to increase the number of instances of a given component by at least 1 for the given input. 
+With it, we must also add as many new components as needed to satisfy all the application constraints that are given.
+We will compare this greedy approach with the exact one, namely MiniZinc. 
+"""
+
 
 def get_components(file):
     """
